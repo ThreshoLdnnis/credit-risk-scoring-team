@@ -1,0 +1,37 @@
+{
+  "status": "建议起始配置，团队尚未实现或运行业务模块",
+  "seed": 42,
+  "split": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15,
+    "unit": "cleaned_feature_group"
+  },
+  "baseline": {
+    "C": 1.0,
+    "penalty": "l2",
+    "max_iter": 2000
+  },
+  "scorecard": {
+    "backend": "optbinning",
+    "max_n_bins": 5,
+    "min_iv": 0.02,
+    "C": 1.0,
+    "base_score": 600.0,
+    "base_odds": 20.0,
+    "pdo": 20.0
+  },
+  "tree": {
+    "n_estimators": 500,
+    "learning_rate": 0.04,
+    "num_leaves": 15,
+    "min_child_samples": 50,
+    "early_stopping_rounds": 30,
+    "metric": "auc"
+  },
+  "threshold": {
+    "selection_data": "validation",
+    "method": "max_tpr_minus_fpr",
+    "tie_break": "largest_finite_threshold_in_0_1"
+  }
+}

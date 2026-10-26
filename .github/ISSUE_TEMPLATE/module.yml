@@ -1,0 +1,30 @@
+name: 模块任务
+description: 认领模块、路径和验收，避免多人同时修改同一文件。
+title: "[模块] "
+body:
+  - type: input
+    id: owner
+    attributes:
+      label: 主责 GitHub 用户名
+      placeholder: 填写一个主责账号
+    validations:
+      required: true
+  - type: textarea
+    id: paths
+    attributes:
+      label: 允许修改的路径
+      description: 同一文件同一时间只安排一个主责，共享文件请负责人协调。
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: 输入输出和依赖接口
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收与验证命令
+    validations:
+      required: true

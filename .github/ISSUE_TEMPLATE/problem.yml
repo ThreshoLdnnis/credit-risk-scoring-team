@@ -1,0 +1,21 @@
+name: 问题与排错
+description: 记录报错、复现与已经尝试的方法。
+title: "[问题] "
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 命令、错误和最小复现
+      description: 不粘贴密码、令牌或客户逐行数据。
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: 已尝试的方法与结果
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境与代码版本
