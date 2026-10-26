@@ -2,7 +2,7 @@
 
 ## 每次交付的固定流程
 
-1. 从任务认领表领取一个模块，在 Issue 写清主责、允许修改的路径、输入输出和验收。一个任务同一时间只有一名主责。
+1. 按已确定的分工推进，在对应 Issue 写清主责、允许修改的路径、输入输出和验收。每个模块或文件同一时间只有一名主责；跨模块任务分别列明子项和路径。
 2. 开工前同步 main，再建短期分支；分支建议 `task/本人用户名-任务号-主题`。
 3. 只修改本任务认领的路径。接口、配置、依赖、根目录说明和集成入口由负责人协调；变更跨模块接口时先在 Issue 对齐上下游。
 4. 小步提交，PR 说明做了什么、怎样验证和还有什么问题，关联对应 Issue。未完成的工作开 Draft PR。
@@ -22,17 +22,18 @@ git push -u origin HEAD
 
 ## 哪些文件由谁改
 
-| 路径 | 主责方式 |
+| 路径 | 主责 |
 | --- | --- |
-| `src/data.py`、`src/eda.py` | 数据主责，认领后独立推进 |
-| `src/scorecard.py` | 评分卡主责 |
-| `src/tree_model.py`、`src/evaluation.py`、`src/explanation.py` | 建模评价主责，可按任务再细分 |
-| `app.py` | 页面主责，按已确认推理接口接入 |
-| `src/baseline.py`、`run_pipeline.py`、`configs/`、依赖、CI | 负责人协调集成，一次只安排一人改同一文件 |
-| `tests/test_data.py` 等模块测试文件 | 与对应业务模块相同主责 |
-| `learning/submissions/本人用户名/` | 本人练习，互不共用同一答案文件 |
-| `worklogs/本人用户名/`、`experiments/本人用户名/` | 本人记录，每天/每次实验新文件 |
-| `reports/final/` | 最终报告由负责人安排一人整合，其余通过 PR 提建议 |
+| `src/data.py`、`src/eda.py` | 吴晓亦：数据读取、校验、清洗、探索与分组切分 |
+| `src/scorecard.py` | 杨曦：WOE/IV、逻辑回归评分卡与信用评分 |
+| `app.py` | 杨曦：Streamlit 界面，按确认的推理接口接入 |
+| `src/baseline.py`、`src/tree_model.py` | 郭宇哲：简单 LR 与 LightGBM |
+| `src/evaluation.py`、`src/explanation.py` | 郭宇哲：统一评价、验证选择与 SHAP |
+| 各模块的 `tests/test_*.py` | 与对应业务模块同一主责；数据吴晓亦、评分卡/页面杨曦、模型/评价/解释郭宇哲 |
+| `run_pipeline.py`、`configs/`、依赖、CI 与根目录说明 | 项目负责人（ThreshoLdnnis）协调集成，安排一人修改同一共享文件 |
+| `learning/submissions/本人用户名/` | 吴晓亦、杨曦、郭宇哲各自完成本人的六项练习 |
+| `worklogs/本人用户名/`、`experiments/本人用户名/` | 各人维护本人日志和实验，每天/每次实验新文件 |
+| `reports/final/` | 项目负责人统一整合；吴晓亦提交数据部分，杨曦提交评分卡与界面部分，郭宇哲提交模型、评价和解释部分 |
 
 ## 同步和冲突怎么处理
 
