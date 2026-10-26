@@ -6,11 +6,11 @@
 
 ## 团队分工
 
-| 成员 | 主责 | 对应模块 |
-| --- | --- | --- |
-| 吴晓亦 | 数据 | 数据读取与校验、清洗、训练集探索、分组切分与分区证据 |
-| 杨曦 | 评分卡与界面 | WOE/IV、逻辑回归评分卡、信用评分、Streamlit 页面 |
-| 郭宇哲 | 模型、评价和解释 | 简单 LR、LightGBM、统一评价、验证选择、SHAP 解释 |
+| 成员 | GitHub 账号 | 主责 | 对应模块 |
+| --- | --- | --- | --- |
+| 吴晓亦 | [Sally-yi](https://github.com/Sally-yi) | 数据 | 数据读取与校验、清洗、训练集探索、分组切分与分区证据 |
+| 杨曦 | [Clement-xi](https://github.com/Clement-xi) | 评分卡与界面 | WOE/IV、逻辑回归评分卡、信用评分、Streamlit 页面 |
+| 郭宇哲 | [morebadly](https://github.com/morebadly) | 模型、评价和解释 | 简单 LR、LightGBM、统一评价、验证选择、SHAP 解释 |
 
 项目负责人（ThreshoLdnnis）统筹接口、共享配置、集成与合并。三位成员分别补充本人模块的测试、实验记录和说明；六项个人练习由每人独立完成。
 

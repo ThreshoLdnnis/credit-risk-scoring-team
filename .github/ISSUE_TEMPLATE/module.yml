@@ -6,7 +6,7 @@ body:
     id: owner
     attributes:
       label: 主责姓名与 GitHub 用户名
-      description: 数据由吴晓亦主责，评分卡与界面由杨曦主责，模型、评价和解释由郭宇哲主责。跨模块任务分别列明子项。
+      description: 数据由吴晓亦（Sally-yi）主责，评分卡与界面由杨曦（Clement-xi）主责，模型、评价和解释由郭宇哲（morebadly）主责。跨模块任务分别列明子项。
       placeholder: 填写主责姓名及对应的 GitHub 账号
     validations:
       required: true

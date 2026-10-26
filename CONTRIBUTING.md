@@ -22,6 +22,8 @@ git push -u origin HEAD
 
 ## 哪些文件由谁改
 
+账号对应：吴晓亦（Sally-yi）、杨曦（Clement-xi）、郭宇哲（morebadly）。
+
 | 路径 | 主责 |
 | --- | --- |
 | `src/data.py`、`src/eda.py` | 吴晓亦：数据读取、校验、清洗、探索与分组切分 |

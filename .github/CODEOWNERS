@@ -1,3 +1,6 @@
-# 默认审查人；具体主责见任务 Issue。
-# 当前私人仓库套餐不强制执行审查，仍需负责人手动确认。
+# 默认审查人由项目负责人统筹；当前私人仓库套餐不强制执行审查。
+# 主责：吴晓亦（Sally-yi）负责 src/data.py、src/eda.py。
+# 主责：杨曦（Clement-xi）负责 src/scorecard.py、app.py。
+# 主责：郭宇哲（morebadly）负责 baseline、tree_model、evaluation、explanation 模块。
+# 主责账号接受邀请前，路径级自动请求不声明为已生效；当前默认审核人如下。
 * @ThreshoLdnnis
