@@ -50,6 +50,10 @@ git push -u origin HEAD
 
 ## GitHub 设置与执行边界
 
-主入口为 main，统一 Squash merge，并启用合并后删除分支、提示同步分支。私人仓库的服务器端强制分支保护是否可用取决于账户套餐；最终启用情况由负责人在设置页核实，不能把文字约定写成已强制执行的保护。
+已采用 main 正式入口、Squash merge、合并后删除临时分支、提示同步分支和自动检查。
 
-如当前套餐不支持强制保护，团队仍按上述 PR 流程操作，由负责人检查后合并。模块认领、同步和审查用于减少冲突，不能承诺任何情况下都不会发生冲突。
+2026-10-26 初始化时，GitHub 设置页明确提示：当前私人仓库的分支保护规则不会强制执行。因此本仓库没有把 PR 审查描述为服务器已经强制拦截的保护；由团队遵守流程、同伴审查、负责人确认合并。CODEOWNERS 记录默认审查人，也不替代人工审查或套餐支持。
+
+模块认领、同步和审查用于减少冲突，不能承诺任何情况下都不会发生冲突。若以后需要 GitHub 强制拦截直接推送、强制审查和检查，应由负责人选择支持这些功能的账户方案，再在设置页核查启用情况。
+
+[GitHub 官方分支保护说明](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
