@@ -20,7 +20,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
-          cache-dependency-path: learning/requirements.txt
+          cache-dependency-path: |
+            learning/requirements.txt
+            requirements.txt
+            constraints.txt
       - name: 安装检查与练习依赖
         run: python -m pip install -r learning/requirements.txt ruff==0.8.2
       - name: 仓库交付边界检查
@@ -33,4 +36,15 @@ jobs:
         run: python tools/exercises.py check-all
       - name: 运行团队已经编写的业务测试
         run: |
-          python -c "import pathlib,subprocess,sys; t=list(pathlib.Path('tests').rglob('test_*.py')); sys.exit(subprocess.call([sys.executable,'-m','pytest','-q','tests']) if t else print('尚无业务测试提交；不代表系统已经验收'))"
+          python - <<'PY'
+          import pathlib
+          import subprocess
+          import sys
+
+          tests = list(pathlib.Path('tests').rglob('test_*.py'))
+          if tests:
+              subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'])
+              subprocess.check_call([sys.executable, '-m', 'pytest', '-q', 'tests'])
+          else:
+              print('尚无业务测试提交；不代表系统已经验收')
+          PY
