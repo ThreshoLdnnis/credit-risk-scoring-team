@@ -1,0 +1,14 @@
+feature,missing_count,missing_rate,non_missing_count
+RevolvingUtilizationOfUnsecuredLines,0,0.0,104974
+age,1,9.526168384552365e-06,104973
+NumberOfTime30-59DaysPastDueNotWorse,185,0.0017623411511421877,104789
+DebtRatio,0,0.0,104974
+MonthlyIncome,20728,0.19745841827500143,84246
+NumberOfOpenCreditLinesAndLoans,0,0.0,104974
+NumberOfTimes90DaysLate,185,0.0017623411511421877,104789
+NumberRealEstateLoansOrLines,0,0.0,104974
+NumberOfTime60-89DaysPastDueNotWorse,185,0.0017623411511421877,104789
+NumberOfDependents,2790,0.0265780097929011,102184
+NumberOfTime30-59DaysPastDueNotWorse__special,0,0.0,104974
+NumberOfTimes90DaysLate__special,0,0.0,104974
+NumberOfTime60-89DaysPastDueNotWorse__special,0,0.0,104974
