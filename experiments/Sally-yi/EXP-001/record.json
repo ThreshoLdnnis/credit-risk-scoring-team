@@ -1,0 +1,240 @@
+{
+  "记录类型": "T02 真实数据准备实验，未训练模型",
+  "实验编号": "EXP-001",
+  "日期与时区": "2026-10-27 Asia/Shanghai",
+  "执行者": "Sally-yi；Codex 协助执行，个人复现讲解待完成",
+  "研究问题与预期": "核验固定清洗规则、相同输入组隔离和训练集探索，并保存下游可复用的分区证据。",
+  "相对上一实验的改变": "首份数据准备实验；T01 已完成环境和首次读数。",
+  "数据版本": {
+    "来源与取得方式": "本人从 Kaggle Give Me Some Credit 下载，D:/GiveMeSomeCredit.zip；原始文件保持本地",
+    "文件名与版本": "cs-training.csv",
+    "文件SHA256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+    "行数与字段": {
+      "行数": 150000,
+      "原始列数": 12,
+      "模型输入": [
+        "RevolvingUtilizationOfUnsecuredLines",
+        "age",
+        "NumberOfTime30-59DaysPastDueNotWorse",
+        "DebtRatio",
+        "MonthlyIncome",
+        "NumberOfOpenCreditLinesAndLoans",
+        "NumberOfTimes90DaysLate",
+        "NumberRealEstateLoansOrLines",
+        "NumberOfTime60-89DaysPastDueNotWorse",
+        "NumberOfDependents",
+        "NumberOfTime30-59DaysPastDueNotWorse__special",
+        "NumberOfTimes90DaysLate__special",
+        "NumberOfTime60-89DaysPastDueNotWorse__special"
+      ]
+    },
+    "标签列及1的含义": "SeriousDlqin2yrs=1：两年内发生90天或以上严重逾期",
+    "目标窗口": "两年",
+    "是否已参与开发": "是：T01 首次读数，T02 按预定规则清洗、分组与训练集探索",
+    "本次评价范围": "数据与分区审计；未评价模型"
+  },
+  "处理方式": {
+    "缺失异常重复与序号处理": {
+      "age_zero_to_missing": 1,
+      "special_96_or_98_to_missing": {
+        "NumberOfTime30-59DaysPastDueNotWorse": 269,
+        "NumberOfTimes90DaysLate": 269,
+        "NumberOfTime60-89DaysPastDueNotWorse": 269
+      }
+    },
+    "切分比例seed与组定义": {
+      "seed": 42,
+      "target_group_proportions": [
+        0.7,
+        0.15,
+        0.15
+      ],
+      "stratification": "maximum original target in each cleaned-feature group",
+      "row_id_source": "Unnamed: 0",
+      "fingerprint": "SHA256(JSON([ordered columns, canonical float.hex values or null]))"
+    },
+    "分区行数与正类比例": {
+      "train": {
+        "rows": 104974,
+        "row_fraction": 0.6998266666666667,
+        "groups": 104547,
+        "negative": 97956,
+        "positive": 7018,
+        "positive_rate": 0.0668546497227885
+      },
+      "validation": {
+        "rows": 22518,
+        "row_fraction": 0.15012,
+        "groups": 22403,
+        "negative": 21011,
+        "positive": 1507,
+        "positive_rate": 0.06692423838706812
+      },
+      "test": {
+        "rows": 22508,
+        "row_fraction": 0.15005333333333334,
+        "groups": 22403,
+        "negative": 21007,
+        "positive": 1501,
+        "positive_rate": 0.06668740003554292
+      }
+    },
+    "仅在训练集拟合的步骤": "无；无状态清洗。训练集探索只读取训练行。",
+    "验证测试转换方式": "同一预定清洗规则，不拟合参数；仅审计覆盖、隔离和类别。",
+    "分区成员证据位置": "artifacts/Sally-yi/EXP-001-20261027-reviewed/split_members.csv"
+  },
+  "模型参数": {
+    "模型名称": null,
+    "完整参数": {},
+    "WOE分箱与IV定义": null,
+    "评分尺度": null,
+    "早停指标及有效迭代": null,
+    "阈值与来源": null,
+    "配置固定时间": null
+  },
+  "评价指标": [],
+  "结果与发现": {
+    "观察与证据": {
+      "rows": 150000,
+      "raw_columns": 12,
+      "cleaned_columns": [
+        "RevolvingUtilizationOfUnsecuredLines",
+        "age",
+        "NumberOfTime30-59DaysPastDueNotWorse",
+        "DebtRatio",
+        "MonthlyIncome",
+        "NumberOfOpenCreditLinesAndLoans",
+        "NumberOfTimes90DaysLate",
+        "NumberRealEstateLoansOrLines",
+        "NumberOfTime60-89DaysPastDueNotWorse",
+        "NumberOfDependents",
+        "NumberOfTime30-59DaysPastDueNotWorse__special",
+        "NumberOfTimes90DaysLate__special",
+        "NumberOfTime60-89DaysPastDueNotWorse__special"
+      ],
+      "groups": 149353,
+      "extra_rows_in_duplicate_groups": 647,
+      "mixed_label_groups": 38,
+      "rules": {
+        "age_zero_to_missing": 1,
+        "special_96_or_98_to_missing": {
+          "NumberOfTime30-59DaysPastDueNotWorse": 269,
+          "NumberOfTimes90DaysLate": 269,
+          "NumberOfTime60-89DaysPastDueNotWorse": 269
+        }
+      },
+      "missing_before": {
+        "RevolvingUtilizationOfUnsecuredLines": 0,
+        "age": 0,
+        "NumberOfTime30-59DaysPastDueNotWorse": 0,
+        "DebtRatio": 0,
+        "MonthlyIncome": 29731,
+        "NumberOfOpenCreditLinesAndLoans": 0,
+        "NumberOfTimes90DaysLate": 0,
+        "NumberRealEstateLoansOrLines": 0,
+        "NumberOfTime60-89DaysPastDueNotWorse": 0,
+        "NumberOfDependents": 3924
+      },
+      "missing_after": {
+        "RevolvingUtilizationOfUnsecuredLines": 0,
+        "age": 1,
+        "NumberOfTime30-59DaysPastDueNotWorse": 269,
+        "DebtRatio": 0,
+        "MonthlyIncome": 29731,
+        "NumberOfOpenCreditLinesAndLoans": 0,
+        "NumberOfTimes90DaysLate": 269,
+        "NumberRealEstateLoansOrLines": 0,
+        "NumberOfTime60-89DaysPastDueNotWorse": 269,
+        "NumberOfDependents": 3924,
+        "NumberOfTime30-59DaysPastDueNotWorse__special": 0,
+        "NumberOfTimes90DaysLate__special": 0,
+        "NumberOfTime60-89DaysPastDueNotWorse__special": 0
+      },
+      "splits": {
+        "train": {
+          "rows": 104974,
+          "row_fraction": 0.6998266666666667,
+          "groups": 104547,
+          "negative": 97956,
+          "positive": 7018,
+          "positive_rate": 0.0668546497227885
+        },
+        "validation": {
+          "rows": 22518,
+          "row_fraction": 0.15012,
+          "groups": 22403,
+          "negative": 21011,
+          "positive": 1507,
+          "positive_rate": 0.06692423838706812
+        },
+        "test": {
+          "rows": 22508,
+          "row_fraction": 0.15005333333333334,
+          "groups": 22403,
+          "negative": 21007,
+          "positive": 1501,
+          "positive_rate": 0.06668740003554292
+        }
+      },
+      "training_eda_rows": 104974,
+      "audit": {
+        "all_rows_once": true,
+        "group_overlap": 0,
+        "seed_reproducible": true,
+        "each_split_has_both_classes": true
+      }
+    },
+    "支持的判断": "固定规则可复现；全行覆盖，同组不跨区，训练集探索范围正确。",
+    "适用限制": "尚无模型指标；非时间外或客户外独立验证。",
+    "图表预测评分及SHAP检查位置": "reports/Sally-yi/T02/（仅训练集EDA）；预测/评分/SHAP未运行"
+  },
+  "代码提交版本": {
+    "仓库": "https://github.com/ThreshoLdnnis/credit-risk-scoring-team",
+    "分支与提交SHA": {
+      "base_or_current_commit": "d03b811b4927a76c93dbf80fb16f35d61c4ee36b",
+      "branch": "task/Sally-yi-T02-data-eda",
+      "working_tree_changes": "M src/data.py\n M src/eda.py\n?? experiments/Sally-yi/\n?? tests/test_data.py"
+    },
+    "未提交改动": "运行发生在提交前，精确业务代码文件SHA256附于本记录，可与最终提交核对。",
+    "Python与依赖版本": {
+      "python": "3.11.17",
+      "packages": {
+        "numpy": "1.26.4",
+        "pandas": "2.2.3",
+        "scikit-learn": "1.5.2",
+        "matplotlib": "3.9.2",
+        "pyarrow": "20.0.0"
+      }
+    },
+    "运行命令": [
+      "python",
+      "experiments/Sally-yi/run_t02.py",
+      "--input",
+      "E:\\信用评分卡\\credit-risk-scoring-team\\data\\raw\\cs-training.csv",
+      "--output",
+      "E:\\信用评分卡\\credit-risk-scoring-team\\artifacts\\Sally-yi\\EXP-001-20261027-reviewed",
+      "--seed",
+      "42"
+    ],
+    "输出目录与日志": "artifacts/Sally-yi/EXP-001-20261027-reviewed",
+    "仓库性质": "本次团队新工程"
+  },
+  "存在的问题": [
+    "本人复现讲解、同伴审查及负责人合并尚待完成；六项个人练习另行完成。"
+  ],
+  "处理与复验结果": {
+    "all_rows_once": true,
+    "group_overlap": 0,
+    "seed_reproducible": true,
+    "each_split_has_both_classes": true
+  },
+  "AI辅助与本人验证": "用户授权 Codex 编写、运行、测试和整理；本人下载官方数据。未把 AI 执行测试等同于本人掌握。",
+  "审查者日期与建议": null,
+  "下一步行动": "本人复现讲解；同伴审查；负责人合并；下游共用固定分区。",
+  "代码文件SHA256": {
+    "src/data.py": "43aa72918d9d0b90e13b92f7d0dae993eb4471900d3c2c0ffd98be8780b9eb1d",
+    "src/eda.py": "e2f5fdb6397c1a22ceaf61e205ebe28866f0a55b03985c91b5c896be4628bf56",
+    "experiments/Sally-yi/run_t02.py": "de60f864afb6627938e361f405234fbb12a316dfeb2cdc02bd23885d7b2b65a7",
+    "configs/experiment.json": "c6eab1f1485445a375c9748ac869d6aba33c4d88260e8ac7c169828b120d3a97"
+  }
+}

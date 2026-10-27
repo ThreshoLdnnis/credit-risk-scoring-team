@@ -1,0 +1,61 @@
+{
+  "partition": "training",
+  "n_samples": 104974,
+  "n_features": 13,
+  "features": [
+    "RevolvingUtilizationOfUnsecuredLines",
+    "age",
+    "NumberOfTime30-59DaysPastDueNotWorse",
+    "DebtRatio",
+    "MonthlyIncome",
+    "NumberOfOpenCreditLinesAndLoans",
+    "NumberOfTimes90DaysLate",
+    "NumberRealEstateLoansOrLines",
+    "NumberOfTime60-89DaysPastDueNotWorse",
+    "NumberOfDependents",
+    "NumberOfTime30-59DaysPastDueNotWorse__special",
+    "NumberOfTimes90DaysLate__special",
+    "NumberOfTime60-89DaysPastDueNotWorse__special"
+  ],
+  "total_missing_values": 24074,
+  "label_counts": {
+    "0": 97956,
+    "1": 7018
+  },
+  "label_proportions": {
+    "0": 0.9331453502772115,
+    "1": 0.0668546497227885
+  },
+  "correlation": {
+    "method": "pearson",
+    "missing_policy": "pairwise_complete",
+    "min_observations": 2,
+    "target_included": false,
+    "undefined_cells": "empty in CSV; N/A in chart",
+    "unavailable_features": []
+  },
+  "distribution": {
+    "display_transforms": {
+      "RevolvingUtilizationOfUnsecuredLines": "log1p",
+      "age": "raw",
+      "NumberOfTime30-59DaysPastDueNotWorse": "log1p",
+      "DebtRatio": "log1p",
+      "MonthlyIncome": "log1p",
+      "NumberOfOpenCreditLinesAndLoans": "raw",
+      "NumberOfTimes90DaysLate": "log1p",
+      "NumberRealEstateLoansOrLines": "log1p",
+      "NumberOfTime60-89DaysPastDueNotWorse": "log1p",
+      "NumberOfDependents": "log1p",
+      "NumberOfTime30-59DaysPastDueNotWorse__special": "raw",
+      "NumberOfTimes90DaysLate__special": "raw",
+      "NumberOfTime60-89DaysPastDueNotWorse__special": "raw"
+    },
+    "log1p_rule": "Nonnegative values, max > 10 and max > 10 * median; display only",
+    "statistics_scale": "original values",
+    "std_ddof": 1,
+    "missing_policy": "Exclude missing values per feature; retain missing counts",
+    "clipping": false,
+    "imputation": false
+  },
+  "export_scope": "Aggregates only; no source row identifiers or per-row labels"
+}
