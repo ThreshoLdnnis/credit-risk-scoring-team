@@ -1,0 +1,136 @@
+{
+  "记录类型": "T03初始准备历史记录；当前共享入口真实验收见EXP-002/record.json",
+  "实验编号": "T03-20261028-PREP",
+  "日期与时区": "2026-10-28T11:48:28.311320+08:00",
+  "执行者": "郭宇哲（morebadly）任务；Codex 辅助编写与执行，本人复现讲解待完成",
+  "研究问题与预期": "建立训练内中位数填补、缺失指示、标准化和 L2 LR 的可复现基线",
+  "相对上一实验的改变": "本人首份 T03 准备记录；复用已合入的 T02 数据接口，不改同伴模块",
+  "数据版本": {
+    "来源与取得方式": "指定 Kaggle Give Me Some Credit 官方数据；本机尚未取得。匿名官方下载接口实测返回 HTTP 401。",
+    "文件名与版本": "cs-training.csv（待下载）",
+    "文件SHA256": null,
+    "行数与字段": null,
+    "标签列及1的含义": "SeriousDlqin2yrs=1，两年内90天或以上严重逾期",
+    "目标窗口": "两年",
+    "是否已参与开发": "本次尚未读取官方样本；同伴 T02 已使用同一指定数据开展数据开发",
+    "本次评价范围": "116 项业务测试与人工数据工程闭环；未评价官方数据模型效果",
+    "待核验的T02文件SHA256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac"
+  },
+  "处理方式": {
+    "缺失异常重复与序号处理": "复用 src/data.py 的固定清洗，不删行，不把标签或导出序号入模",
+    "切分比例seed与组定义": "复用 split_dataset：清洗后13列内容组、组最大标签分层、70/15/15、精确seed=42",
+    "分区行数与正类比例": null,
+    "仅在训练集拟合的步骤": "SimpleImputer(strategy=median, add_indicator=True, keep_empty_features=True)、StandardScaler、L2 LR",
+    "验证测试转换方式": "复用已拟合 pipeline；测试概率计算前保存 validation 阈值和参数固定记录",
+    "分区成员证据位置": "正式运行后生成于 artifacts/morebadly/唯一目录；本次没有官方数据分区"
+  },
+  "模型参数": {
+    "模型名称": "简单 L2 LogisticRegression（已实现，未在官方数据拟合）",
+    "完整参数": {
+      "C": 1.0,
+      "penalty": "l2",
+      "max_iter": 2000,
+      "solver": "lbfgs",
+      "random_state": 42
+    },
+    "WOE分箱与IV定义": null,
+    "评分尺度": null,
+    "早停指标及有效迭代": null,
+    "阈值与来源": "正式运行由 validation 最大 TPR-FPR 的有限[0,1]阈值确定，并列取较大值；本次尚无真实阈值",
+    "配置固定时间": null
+  },
+  "评价指标": [],
+  "结果与发现": {
+    "观察与证据": {
+      "pytest_tests": {
+        "passed": 116,
+        "failed": 0,
+        "warnings": 14,
+        "warnings说明": "现有 matplotlib/pyparsing 废弃提示，不影响断言"
+      },
+      "pip_check": "通过",
+      "完整依赖导入检查": "通过",
+      "ruff_E_F_I": "通过",
+      "compileall": "通过",
+      "个人练习": "check-all 显示尚无提交，未计为通过",
+      "人工闭环": {
+        "样本行数": 240,
+        "正式模式拒绝非指定哈希": true,
+        "组交集": 0,
+        "保存加载概率最大差": 0.0,
+        "训练仅使用train行": true,
+        "测试预测前冻结阈值": true
+      },
+      "独立审查": "已修复 seed 可变化、object 复数静默截断；复核未发现新实质问题"
+    },
+    "支持的判断": "模型模块与个人实验链路通过人工数据工程验证；可以接收指定官方数据运行",
+    "适用限制": "没有官方数据结果；未完成共享入口集成、同伴审查、负责人合并或本人复现讲解",
+    "图表预测评分及SHAP检查位置": "正式概率与分区证据待实际运行；评分卡、SHAP 属后续任务"
+  },
+  "代码提交版本": {
+    "仓库": "https://github.com/ThreshoLdnnis/credit-risk-scoring-team",
+    "分支与提交SHA": {
+      "base_main": "f1684ce11ecd0914c2c9385abb1624ec23107440",
+      "validated_code_commit": "09aefd76465536e37f630d8034ad702c27334fd8",
+      "branch": "task/morebadly-T03-baseline"
+    },
+    "未提交改动": "此状态记录与日志稍后独立提交；已验证业务代码SHA256如下",
+    "Python与依赖版本": {
+      "python": "3.11.16",
+      "packages": {
+        "numpy": "1.26.4",
+        "pandas": "2.2.3",
+        "scipy": "1.14.1",
+        "scikit-learn": "1.5.2",
+        "joblib": "1.4.2",
+        "pytest": "8.3.3",
+        "ruff": "0.8.2"
+      }
+    },
+    "运行命令": [
+      "python -m pip install -r requirements.txt",
+      "python -m pip check",
+      "python check_environment.py",
+      "python -m pytest -q tests -p no:cacheprovider --basetemp D:/社团实践/tmp/t03-pytest-reviewed-v2",
+      "python -m ruff check . --select E,F,I --ignore E501",
+      "python -m compileall -q src tools learning experiments/morebadly tests app.py run_pipeline.py check_environment.py",
+      "python tools/exercises.py check-all"
+    ],
+    "输出目录与日志": "本地环境 reports/environment.json；人工数据测试证据在 D:/社团实践/tmp/t03-pytest-reviewed-v2；真实实验输出待生成",
+    "仓库性质": "本次团队新工程"
+  },
+  "存在的问题": [
+    "指定 cs-training.csv 尚未下载；官方数据指标与阈值均留空，不能认定 T03 已完成全部验收",
+    "run_pipeline.py 由负责人安排集成；本次提供独立可运行脚本与调用示例",
+    "需要至少一位同伴审查、负责人确认；个人六项练习和本人讲解另行完成"
+  ],
+  "处理与复验结果": "沙箱阻止科学计算DLL加载；经工具安全审批在沙箱外运行。首次出现Git目录所有权错误，改用仅当前仓库调用生效的safe.directory后，完整116项测试通过。未修改系统安全策略或全局Git信任配置。",
+  "AI辅助与本人验证": "Codex 辅助读取规范、编写代码和测试、运行验证及整理；不把AI执行等同于本人掌握或同伴审查。",
+  "审查者日期与建议": null,
+  "下一步行动": "取得官方cs-training.csv后执行 python experiments/morebadly/run_t03.py；核验哈希、分区与真实指标，另建实验记录，再由负责人集成共享入口。",
+  "代码文件SHA256": {
+    "src/data.py": "43aa72918d9d0b90e13b92f7d0dae993eb4471900d3c2c0ffd98be8780b9eb1d",
+    "src/baseline.py": "e65a047362f3af4c9063ffe9efc8b10feb99890e07c0e40cae087bd5ada5edb9",
+    "tests/test_baseline.py": "60adff1bf9625ab69358dbfe082ef1355469f3ea8c081c53049b8ed18f1f531b",
+    "experiments/morebadly/run_t03.py": "ed6b0495b8bb6f9c243ddecabfbec75a06db9a93f4a55544f4be1050b723978b",
+    "configs/experiment.json": "c6eab1f1485445a375c9748ac869d6aba33c4d88260e8ac7c169828b120d3a97"
+  },
+  "后续解决情况": {
+    "指定数据已取得": {
+      "acquisition": "User authorized searching public mirrors; identical bytes verified against team T02 official-download SHA256.",
+      "official_origin": "https://www.kaggle.com/competitions/GiveMeSomeCredit/data",
+      "mirror_repository": "https://github.com/JLZml/Credit-Scoring-Data-Sets",
+      "mirror_ref": "dd454322df86d98ff97d6035357aa9a5c450c783",
+      "download_url": "https://raw.githubusercontent.com/JLZml/Credit-Scoring-Data-Sets/dd454322df86d98ff97d6035357aa9a5c450c783/3.%20Kaggle/Give%20Me%20Some%20Credit/cs-training.csv",
+      "downloaded_at": "2026-10-28T11:49:49.617839+08:00",
+      "bytes": 7564965,
+      "sha256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+      "rows": 150000,
+      "raw_columns": 12,
+      "matches_T02_official_download": true
+    },
+    "真实实验记录": "EXP-002/record.json",
+    "真实实验状态": "模型、个人兼容入口与共享入口均已真实运行，结果完全一致",
+    "提交状态": "已获用户授权仅提交T03；个人练习不包含在本次提交"
+  }
+}
