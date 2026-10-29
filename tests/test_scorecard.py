@@ -1,8 +1,16 @@
 """Focused tests for the train-only WOE/IV scorecard."""
 
+import hashlib
+import importlib.util
+import json
+import warnings
+from pathlib import Path
+
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.exceptions import ConvergenceWarning
 
 from src.scorecard import (
     _transform_woe,
@@ -214,3 +222,103 @@ def test_fit_and_predict_reject_invalid_features(scorecard_data):
     bundle = fit_scorecard(x, y, settings)
     with pytest.raises(ValueError, match="字段与训练字段不一致"):
         predict_scorecard(bundle, x.drop(columns="signal").iloc[:2])
+
+
+def test_label_series_must_align_with_training_rows(scorecard_data):
+    x, y, settings = scorecard_data
+    labels = pd.Series(y, index=x.index)
+    with pytest.raises(ValueError, match="行顺序"):
+        fit_scorecard(x, labels.iloc[::-1], settings)
+    bundle = fit_scorecard(x, labels, settings)
+    assert bundle["status"] == "fitted"
+
+
+def test_complex_features_are_rejected_before_float_conversion(scorecard_data):
+    x, y, settings = scorecard_data
+    complex_input = x.copy()
+    complex_input["signal"] = complex_input["signal"].astype(complex) + 2j
+    with pytest.raises(TypeError, match="复数"):
+        fit_scorecard(complex_input, y, settings)
+    bundle = fit_scorecard(x, y, settings)
+    with pytest.raises(TypeError, match="复数"):
+        predict_scorecard(bundle, complex_input.iloc[:2])
+
+
+def test_save_load_and_inference_never_refits(scorecard_data, tmp_path, monkeypatch):
+    from optbinning import OptimalBinning
+    from sklearn.linear_model import LogisticRegression
+
+    x, y, settings = scorecard_data
+    bundle = fit_scorecard(x, y, settings)
+    path = tmp_path / "scorecard.joblib"
+    joblib.dump(bundle, path)
+    restored = joblib.load(path)
+    expected = predict_scorecard(bundle, x)
+
+    def fail_fit(*args, **kwargs):
+        pytest.fail("Inference attempted to refit bins or logistic regression")
+
+    monkeypatch.setattr(OptimalBinning, "fit", fail_fit)
+    monkeypatch.setattr(LogisticRegression, "fit", fail_fit)
+    pd.testing.assert_frame_equal(predict_scorecard(restored, x), expected, check_exact=True)
+    assert restored["selected_features"] == bundle["selected_features"]
+
+
+def test_lr_nonconvergence_cannot_be_reported_as_success(scorecard_data, monkeypatch):
+    from sklearn.linear_model import LogisticRegression
+
+    def nonconverged(*args, **kwargs):
+        warnings.warn("Convergence test", ConvergenceWarning)
+
+    monkeypatch.setattr(LogisticRegression, "fit", nonconverged)
+    with pytest.raises(RuntimeError, match="未收敛"):
+        fit_scorecard(*scorecard_data)
+
+
+def test_failed_binning_is_not_silently_accepted(scorecard_data, monkeypatch):
+    import optbinning
+
+    class FailedBinning:
+        status = "INFEASIBLE"
+
+        def __init__(self, **kwargs):
+            pass
+
+        def fit(self, *args):
+            return self
+
+    monkeypatch.setattr(optbinning, "OptimalBinning", FailedBinning)
+    with pytest.raises(RuntimeError, match="INFEASIBLE"):
+        fit_scorecard(*scorecard_data)
+
+
+def _experiment_module():
+    path = Path(__file__).resolve().parents[1] / "experiments/morebadly/run_t04.py"
+    spec = importlib.util.spec_from_file_location("t04_validation_runner", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_experiment_metrics_include_fixed_threshold_precision_recall_f1():
+    runner = _experiment_module()
+    result = runner.evaluate([0, 0, 1, 1], np.array([.1, .4, .35, .8]), .4)
+    assert result["auc"] == .75
+    assert result["brier"] == pytest.approx(.158125)
+    assert [result[k] for k in ["tn", "fp", "fn", "tp"]] == [1, 1, 1, 1]
+    assert [result[k] for k in ["precision", "recall", "f1"]] == [.5, .5, .5]
+    none = runner.evaluate([0, 1], np.array([.1, .2]), 1.0)
+    assert [none[k] for k in ["precision", "recall", "f1"]] == [0, 0, 0]
+
+
+def test_experiment_rejects_other_threshold_protocol_before_training(tmp_path, monkeypatch):
+    runner = _experiment_module()
+    source, config_path, output = tmp_path / "unit-check.csv", tmp_path / "config.json", tmp_path / "output"
+    source.write_bytes(b"unit-test protocol validation only")
+    monkeypatch.setattr(runner, "EXPECTED_SHA256", hashlib.sha256(source.read_bytes()).hexdigest())
+    config = json.loads((runner.ROOT / "configs/experiment.json").read_text(encoding="utf-8"))
+    config["threshold"]["selection_data"] = "test"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    with pytest.raises(ValueError, match="validation-only"):
+        runner.run(source, output, config_path)
+    assert not output.exists()

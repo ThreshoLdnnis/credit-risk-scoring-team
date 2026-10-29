@@ -1,0 +1,393 @@
+{
+  "记录类型": "T04真实评分卡验收，基于Clement-xi PR12的补充",
+  "实验编号": "T04-EXP-002",
+  "日期与时区": "2026-10-29T12:31:23.535243+08:00",
+  "执行者": "郭宇哲（morebadly）补充验收，Codex辅助执行；评分卡原实现为杨曦（Clement-xi）",
+  "研究问题与预期": "在指定真实数据及固定分区验证原生WOE/IV、训练内LR、评分尺度和分项加和",
+  "相对上一实验的改变": "沿用T02/T03的数据协议；采用既有T04 PR12评分卡并补齐标签对齐、复数拒绝及收敛失败保护",
+  "数据版本": {
+    "来源与取得方式": {
+      "acquisition": "User authorized searching public mirrors; identical bytes verified against team T02 official-download SHA256.",
+      "official_origin": "https://www.kaggle.com/competitions/GiveMeSomeCredit/data",
+      "mirror_repository": "https://github.com/JLZml/Credit-Scoring-Data-Sets",
+      "mirror_ref": "dd454322df86d98ff97d6035357aa9a5c450c783",
+      "download_url": "https://raw.githubusercontent.com/JLZml/Credit-Scoring-Data-Sets/dd454322df86d98ff97d6035357aa9a5c450c783/3.%20Kaggle/Give%20Me%20Some%20Credit/cs-training.csv",
+      "downloaded_at": "2026-10-28T11:49:49.617839+08:00",
+      "bytes": 7564965,
+      "sha256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+      "rows": 150000,
+      "raw_columns": 12,
+      "matches_T02_official_download": true
+    },
+    "文件名与版本": "cs-training.csv，Kaggle Give Me Some Credit原始文件的公开镜像，字节与T02官方原始文件一致",
+    "文件SHA256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+    "行数与字段": {
+      "rows": 150000,
+      "raw_columns": 12,
+      "input_columns": [
+        "RevolvingUtilizationOfUnsecuredLines",
+        "age",
+        "NumberOfTime30-59DaysPastDueNotWorse",
+        "DebtRatio",
+        "MonthlyIncome",
+        "NumberOfOpenCreditLinesAndLoans",
+        "NumberOfTimes90DaysLate",
+        "NumberRealEstateLoansOrLines",
+        "NumberOfTime60-89DaysPastDueNotWorse",
+        "NumberOfDependents",
+        "NumberOfTime30-59DaysPastDueNotWorse__special",
+        "NumberOfTimes90DaysLate__special",
+        "NumberOfTime60-89DaysPastDueNotWorse__special"
+      ]
+    },
+    "标签列及1的含义": "SeriousDlqin2yrs=1，两年内发生90天或以上严重逾期",
+    "目标窗口": "两年",
+    "是否已参与开发": "是，已参与T02/T03；此次不是新的独立测试数据",
+    "本次评价范围": "内部内容组隔离的训练、验证、测试分区",
+    "本次数据是否通过": true
+  },
+  "处理方式": {
+    "缺失异常重复与序号处理": "复用T02 clean_features：age=0设缺失，96/98添加special标记再设缺失；保留所有行，标签和序号不入模",
+    "切分比例seed与组定义": "13列清洗后输入定义内容组；组最大标签分层，70/15/15，seed42；原始y逐行保留",
+    "分区行数与正类比例": {
+      "train": {
+        "rows": 104974,
+        "groups": 104547,
+        "positive": 7018,
+        "positive_rate": 0.0668546497227885,
+        "probability_min": 0.006010110385573722,
+        "probability_max": 0.8543391699544252,
+        "score_min": 462.51751895249373,
+        "score_max": 660.9553556740369
+      },
+      "validation": {
+        "rows": 22518,
+        "groups": 22403,
+        "positive": 1507,
+        "positive_rate": 0.06692423838706812,
+        "probability_min": 0.006010110385573722,
+        "probability_max": 0.855137647813437,
+        "score_min": 462.3319589647916,
+        "score_max": 660.9553556740369
+      },
+      "test": {
+        "rows": 22508,
+        "groups": 22403,
+        "positive": 1501,
+        "positive_rate": 0.06668740003554292,
+        "probability_min": 0.006010110385573722,
+        "probability_max": 0.8447688825367717,
+        "score_min": 464.67865998820133,
+        "score_max": 660.9553556740369
+      }
+    },
+    "仅在训练集拟合的步骤": "每列原生OptBinning监督分箱、WOE/IV和IV筛选、L2 LR；常量/全缺失列IV0并排除；训练未见缺失时预测用0 WOE",
+    "验证测试转换方式": "只调用已拟合的分箱与LR；验证确定阈值后冻结，再预测和评价测试分区",
+    "分区成员证据位置": "artifacts/morebadly/T04-EXP-002-20261029/split_members.csv、split_positions.npz"
+  },
+  "模型参数": {
+    "模型名称": "native_woe_iv_l2_scorecard",
+    "完整参数": {
+      "C": 1.0,
+      "class_weight": null,
+      "dual": false,
+      "fit_intercept": true,
+      "intercept_scaling": 1,
+      "l1_ratio": null,
+      "max_iter": 2000,
+      "multi_class": "deprecated",
+      "n_jobs": null,
+      "penalty": "l2",
+      "random_state": 42,
+      "solver": "lbfgs",
+      "tol": 0.0001,
+      "verbose": 0,
+      "warm_start": false
+    },
+    "WOE分箱与IV定义": {
+      "settings": {
+        "backend": "optbinning",
+        "max_n_bins": 5,
+        "min_iv": 0.02,
+        "C": 1.0,
+        "base_score": 600.0,
+        "base_odds": 20.0,
+        "pdo": 20.0
+      },
+      "iv_summary": {
+        "RevolvingUtilizationOfUnsecuredLines": {
+          "iv": 1.1095830313205635,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "age": {
+          "iv": 0.24978104411101287,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "NumberOfTime30-59DaysPastDueNotWorse": {
+          "iv": 0.7390693048942371,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "DebtRatio": {
+          "iv": 0.08412297817318828,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "MonthlyIncome": {
+          "iv": 0.08027865459606978,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "NumberOfOpenCreditLinesAndLoans": {
+          "iv": 0.07903143858151492,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "NumberOfTimes90DaysLate": {
+          "iv": 0.8383577466655504,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "NumberRealEstateLoansOrLines": {
+          "iv": 0.05236701254649528,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "NumberOfTime60-89DaysPastDueNotWorse": {
+          "iv": 0.0405783743129427,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "NumberOfDependents": {
+          "iv": 0.035598789746933215,
+          "selected": true,
+          "threshold_inclusive": true
+        },
+        "NumberOfTime30-59DaysPastDueNotWorse__special": {
+          "iv": 0.0,
+          "selected": false,
+          "threshold_inclusive": true
+        },
+        "NumberOfTimes90DaysLate__special": {
+          "iv": 0.0,
+          "selected": false,
+          "threshold_inclusive": true
+        },
+        "NumberOfTime60-89DaysPastDueNotWorse__special": {
+          "iv": 0.0,
+          "selected": false,
+          "threshold_inclusive": true
+        }
+      },
+      "solver_status": {
+        "RevolvingUtilizationOfUnsecuredLines": "OPTIMAL",
+        "age": "OPTIMAL",
+        "NumberOfTime30-59DaysPastDueNotWorse": "OPTIMAL",
+        "DebtRatio": "OPTIMAL",
+        "MonthlyIncome": "OPTIMAL",
+        "NumberOfOpenCreditLinesAndLoans": "OPTIMAL",
+        "NumberOfTimes90DaysLate": "OPTIMAL",
+        "NumberRealEstateLoansOrLines": "OPTIMAL",
+        "NumberOfTime60-89DaysPastDueNotWorse": "OPTIMAL",
+        "NumberOfDependents": "OPTIMAL",
+        "NumberOfTime30-59DaysPastDueNotWorse__special": "OPTIMAL",
+        "NumberOfTimes90DaysLate__special": "OPTIMAL",
+        "NumberOfTime60-89DaysPastDueNotWorse__special": "OPTIMAL"
+      },
+      "definition": "OptBinning原生WOE=ln(好分布/坏分布)，非课堂alpha平滑"
+    },
+    "评分尺度": {
+      "base_score": 600.0,
+      "base_odds": 20.0,
+      "pdo": 20.0,
+      "factor": 28.85390081777927,
+      "offset": 513.5614381022527,
+      "formula": "score = offset - factor * logit(P(y=1))"
+    },
+    "早停指标及有效迭代": {
+      "early_stopping": null,
+      "iterations": [
+        15
+      ]
+    },
+    "阈值与来源": {
+      "threshold": 0.07223157595142599,
+      "source": "validation",
+      "test_used_for_selection": false,
+      "fixed_at": "2026-10-29T12:31:16.211187+08:00",
+      "model_settings": {
+        "backend": "optbinning",
+        "max_n_bins": 5,
+        "min_iv": 0.02,
+        "C": 1.0,
+        "base_score": 600.0,
+        "base_odds": 20.0,
+        "pdo": 20.0
+      },
+      "selected_features": [
+        "RevolvingUtilizationOfUnsecuredLines",
+        "age",
+        "NumberOfTime30-59DaysPastDueNotWorse",
+        "DebtRatio",
+        "MonthlyIncome",
+        "NumberOfOpenCreditLinesAndLoans",
+        "NumberOfTimes90DaysLate",
+        "NumberRealEstateLoansOrLines",
+        "NumberOfTime60-89DaysPastDueNotWorse",
+        "NumberOfDependents"
+      ]
+    },
+    "配置固定时间": "2026-10-29T12:31:16.211187+08:00"
+  },
+  "评价指标": [
+    {
+      "model": "native_woe_iv_l2_scorecard",
+      "partition": "train",
+      "rows": 104974,
+      "positive": 7018,
+      "auc": 0.8500318540026247,
+      "ks": 0.5473996438179576,
+      "ap": 0.3586586819386115,
+      "pr_auc_trapezoidal": 0.3585978990713707,
+      "brier": 0.05109656458006028,
+      "log_loss": 0.18574867938775377,
+      "threshold": 0.07223157595142599,
+      "rule": "p >= threshold",
+      "tn": 78903,
+      "fp": 19053,
+      "fn": 1847,
+      "tp": 5171,
+      "precision": 0.21346598414795245,
+      "recall": 0.7368196067255628,
+      "f1": 0.33102874335829974
+    },
+    {
+      "model": "native_woe_iv_l2_scorecard",
+      "partition": "validation",
+      "rows": 22518,
+      "positive": 1507,
+      "auc": 0.8432591017748878,
+      "ks": 0.5348780714194104,
+      "ap": 0.3480548312402681,
+      "pr_auc_trapezoidal": 0.3477199420411121,
+      "brier": 0.05158603660310316,
+      "log_loss": 0.18818578986378617,
+      "threshold": 0.07223157595142599,
+      "rule": "p >= threshold",
+      "tn": 16871,
+      "fp": 4140,
+      "fn": 404,
+      "tp": 1103,
+      "precision": 0.210375739080679,
+      "recall": 0.7319177173191772,
+      "f1": 0.32681481481481484
+    },
+    {
+      "model": "native_woe_iv_l2_scorecard",
+      "partition": "test",
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8555283926010895,
+      "ks": 0.5457907863395175,
+      "ap": 0.3721504694544947,
+      "pr_auc_trapezoidal": 0.3719303507681221,
+      "brier": 0.05038456798693506,
+      "log_loss": 0.18341643765711885,
+      "threshold": 0.07223157595142599,
+      "rule": "p >= threshold",
+      "tn": 16897,
+      "fp": 4110,
+      "fn": 396,
+      "tp": 1105,
+      "precision": 0.21188878235858102,
+      "recall": 0.7361758827448368,
+      "f1": 0.32906491959499706
+    }
+  ],
+  "结果与发现": {
+    "观察与证据": {
+      "all_rows_once": true,
+      "group_overlap": 0,
+      "seed_reproducible": true,
+      "saved_loaded_predictions_identical": true,
+      "max_points_error": 5.684341886080802e-14,
+      "max_probability_score_link_error": 1.1657341758564144e-15,
+      "score_at_good_bad_odds_20": 600.0,
+      "pdo_on_doubling_good_bad_odds": 20.0,
+      "matches_T03_positions": true,
+      "original_row_and_target_alignment": true,
+      "native_training_class_counts_match": true,
+      "max_native_woe_direction_error": 5.551115123125783e-16,
+      "code_and_artifact_hashes_verified": true,
+      "dataset_usable": true
+    },
+    "支持的判断": "指定数据可用，13个分箱状态均OPTIMAL，训练IV筛选保留10列；测试AUC0.8555283926、KS0.5457907863；评分锚点、PDO、分项加和、概率关联与保存加载通过",
+    "适用限制": "内部研究结果，不代表时间外或实际客户效果；只验收T04模块，不宣称未合入的T03共享入口已接入评分卡",
+    "图表预测评分及SHAP检查位置": "本地模型与逐行分数位于artifacts/morebadly/T04-EXP-002-20261029/；仓库只包含分箱聚合表、汇总和说明"
+  },
+  "代码提交版本": {
+    "仓库": "https://github.com/ThreshoLdnnis/credit-risk-scoring-team",
+    "分支与提交SHA": {
+      "commit": "4acb1e9ffa7ba7e01db29085ec6c1e097e2bb54e",
+      "branch": "task/morebadly-T04-validation",
+      "working_tree_changes": "?? experiments/morebadly/T04-EXP-001/\n?? learning/submissions/morebadly/"
+    },
+    "未提交改动": "运行时未跟踪个人练习和首轮T04-EXP-001历史汇总；业务源码已提交且逐文件SHA核验。本次不提交上述未跟踪目录。",
+    "Python与依赖版本": {
+      "python": "3.11.16",
+      "packages": {
+        "numpy": "1.26.4",
+        "pandas": "2.2.3",
+        "scipy": "1.14.1",
+        "scikit-learn": "1.5.2",
+        "optbinning": "0.20.1",
+        "ortools": "9.9.3963",
+        "joblib": "1.4.2"
+      }
+    },
+    "运行命令": [
+      "python",
+      "experiments/morebadly/run_t04.py",
+      "--input",
+      "D:\\社团实践\\credit-risk-scoring-team\\data\\raw\\cs-training.csv",
+      "--output",
+      "D:\\社团实践\\credit-risk-scoring-team\\artifacts\\morebadly\\T04-EXP-002-20261029",
+      "--config",
+      "D:\\社团实践\\credit-risk-scoring-team\\configs\\experiment.json"
+    ],
+    "输出目录与日志": "artifacts/morebadly/T04-EXP-002-20261029/record.json、run.log、postrun_audit.json",
+    "仓库性质": "团队新工程，基于既有PR12的补充验收"
+  },
+  "存在的问题": [
+    "既有T04 PR12尚待负责人合入main；此次以补充PR提交，保留原作者归属",
+    "T03共享管线接入评分卡属于后续统筹，本次未修改共享入口",
+    "同伴审查、负责人合并与本人复现讲解需实际完成；个人练习不提交"
+  ],
+  "处理与复验结果": "既有7项评分卡测试通过；补充7项回归后全量业务tests共90 passed；真实数据哈希、原生分箱、评分尺度、分项加和、保存加载和分区一致性均通过",
+  "AI辅助与本人验证": "Codex辅助补充实现、测试、真实实验及报告；不冒称人工独立完成或替代同伴审查",
+  "审查者日期与建议": null,
+  "下一步行动": "将补充PR提交到原T04分支，由原主责和负责人审查后统一进入main",
+  "代码文件SHA256": {
+    "src/data.py": "43aa72918d9d0b90e13b92f7d0dae993eb4471900d3c2c0ffd98be8780b9eb1d",
+    "src/scorecard.py": "32d9538c52f9a90369a5f170eb4eb0fb21d36d0d80b3b8f9b5e1d3a36d5bc397",
+    "experiments/morebadly/run_t04.py": "c2b8352bcbae79bad395ca8f064ed07b338e476cc6de5d13a96f3ddbe4b56310"
+  },
+  "配置文件SHA256": "c6eab1f1485445a375c9748ac869d6aba33c4d88260e8ac7c169828b120d3a97",
+  "本地产物SHA256": {
+    "acquisition.json": "d6169c079b171ca5ad7d071bced5a6b7f028172c0f821f3ae27fc7c1855f97c7",
+    "binning_evidence.json": "8c9785d95d06c387e932c54ece8f661a1b722f550ee4ad88a6173f93e95dcc9f",
+    "config.json": "3a79f24b229dceeb87d592eea711e81aee294217d4955727fff5ce91c9e51eed",
+    "iv_summary.json": "4351914a64024fb9374ad9641844c24e9e8bff132b8e80f098f6d2e52e837e42",
+    "metrics.json": "2550ade0ed3fc4bc315d07f0fa32c5580b1fbfd8ac713942b4bb638b394ee55c",
+    "predictions.csv": "cbcee033e9166f389417c8ca631bbe248c0ce7f88dd30a1b9cc74d25d4ca26d1",
+    "scorecard.joblib": "a9b98de954d9a4e66eca641cdc2cfff45c3beb76f7f02ff3efaa92a7261aa1ae",
+    "selection.json": "4c4db5a8f402b4f451b6e85d8d74fb62a0069c18598ba7dc4bdcd996d98b97fc",
+    "split_members.csv": "f6997c066dffa08127087bb21f2155f14fec5157a4c04f6c2749e8ab6cf30590",
+    "split_positions.npz": "df7ed83d06b2bb44ac8164f0098e0b1d537f9efeed4811bd90e71458573e9024",
+    "record.json": "319cb8de4625bf20e82c7833876b8382a03730c9af97380b40cd07f76eeff3f5",
+    "postrun_audit.json": "17809ce7558f205e3561c0587ed71d605dc6fe1d7e9f32a811003c8a2bab7195",
+    "run.log": "44a3c74024f3b71ab118630aefc7192f8d72e97de313efb2b7ef25829b81989c"
+  }
+}
