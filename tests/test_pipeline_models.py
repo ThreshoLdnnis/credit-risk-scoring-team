@@ -133,7 +133,7 @@ def test_scorecard_only_cli_has_correct_artifacts_and_actual_command(model_sourc
     assert set(json.loads(result.stdout)['models']) == {'scorecard'}
 
 
-@pytest.mark.parametrize('models', [[], ['baseline', 'baseline'], ['tree'], 'baseline', None])
+@pytest.mark.parametrize('models', [[], ['baseline', 'baseline'], ['unknown'], 'baseline', None])
 def test_invalid_models_fail_before_creating_output(model_source, tmp_path, models):
     output = tmp_path / 'invalid'
     with pytest.raises(ValueError, match='models'):

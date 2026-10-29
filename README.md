@@ -1,6 +1,6 @@
 # 金融进修第一期：信贷评分卡开发
 
-团队从零完成数据管线、逻辑回归评分卡、LightGBM、SHAP 和 Streamlit。**数据模块、简单 LR 与 WOE/IV 评分卡已实现；共享入口支持同一分区运行两套模型。LightGBM、SHAP 与页面按后续任务推进。**
+团队从零完成数据管线、逻辑回归评分卡、LightGBM、SHAP 和 Streamlit。**数据、简单 LR、WOE/IV 评分卡、LightGBM 与统一评价已实现；共享入口支持同一分区比较三套模型。SHAP 与页面继续按后续任务推进。**
 
 这是本次团队项目的正式仓库，日常只从 **main** 进入。临时任务分支用于提 PR，合并后清理。
 
@@ -45,20 +45,22 @@ flowchart LR
 取得指定的 `data/raw/cs-training.csv` 并安装团队依赖后，在仓库根目录运行：
 
 ```powershell
-.venv\Scripts\python.exe run_pipeline.py --models baseline scorecard
+.venv\Scripts\python.exe run_pipeline.py --models baseline scorecard tree
 ```
 
-默认生成新的本地 `artifacts/team/` 实验目录。两套模型复用一次清洗和分组切分，各自只用训练集拟合、用验证集确定阈值；全部阈值保存后再评价测试集。
+默认生成新的本地 `artifacts/team/` 实验目录。三套模型复用一次清洗和分组切分，只用训练集拟合；LightGBM 用验证集 AUC 选择最佳轮数，各模型用验证集确定阈值。全部模型与阈值固定后再评价测试集。
 
 | 想运行什么 | 命令参数 |
 | --- | --- |
+| 三模型比较 | `--models baseline scorecard tree` |
 | 简单 LR 与评分卡 | `--models baseline scorecard` |
+| 仅 LightGBM | `--models tree` |
 | 仅评分卡 | `--models scorecard` |
 | 仅简单 LR（原有默认行为） | `--models baseline`，或省略 `--models` |
 
-常用产物：`model_comparison.csv` 是按模型和分区排列的汇总比较表；`model_metrics.json` 保存两套模型的指标；`scorecard_binning.json` 保存原生分箱、IV 与评分尺度。模型、分区成员、逐行概率、信用分和分项保存在本地，不上传仓库。
+常用产物：`model_comparison.csv` 是按模型和分区排列的汇总比较表；`model_metrics.json` 保存全部选定模型的指标；`scorecard_binning.json` 保存原生分箱、IV 与评分尺度。`record.json` 另存树模型最佳轮数和验证 AUC 历史；`figures/validation/` 与 `figures/test/` 保存 ROC、PR、校准图及评分卡信用分分布。模型、分区成员、逐行概率、信用分和分项保存在本地，不上传仓库。
 
-可用 `--input`、`--config`、`--output` 指定路径；输出目录必须尚不存在。原有三参数 `run_experiment(data_path, output_dir, settings)` 继续默认运行简单 LR；同时运行两套时加 `models=('baseline', 'scorecard')`。接口和文件说明见 [接口约定](docs/接口约定.md)，修复与真实运行结果见 [T03–T04 联调验收](reports/T03-T04联调验收.md)。
+可用 `--input`、`--config`、`--output` 指定路径；输出目录必须尚不存在。原有三参数 `run_experiment(data_path, output_dir, settings)` 继续默认运行简单 LR；同时运行三套时加 `models=('baseline', 'scorecard', 'tree')`。接口和文件说明见 [接口约定](docs/接口约定.md)，本次入口接入步骤与真实验证见 [LightGBM 共享入口接入](docs/共享入口接入.md)；此前双模型验收见 [T03–T04 联调验收](reports/T03-T04联调验收.md)。
 
 ## 当前进度
 
@@ -67,7 +69,8 @@ flowchart LR
 | 工程目录、接口、协作说明和六项练习框架 | 已准备 |
 | 数据处理、探索与简单 LR 链路 | 已实现；T03 已用指定真实数据验证 |
 | WOE/IV 与评分卡 | 已实现；共享入口可输出概率、信用分和分项 |
-| LightGBM、统一评价曲线、SHAP 与页面 | 待后续任务实现 |
+| LightGBM 与统一评价曲线 | 已实现；共享入口支持三模型及最佳轮数记录 |
+| SHAP 与页面 | 待 T06 完成 |
 | 模块测试、团队实验与最终报告 | 已有数据、模型及共享入口测试；实验见联调验收，最终报告待整合 |
 
 CI 只检查仓库格式、语法和已经提交的练习或测试。绿色检查不代表待实现的系统已经完成。
