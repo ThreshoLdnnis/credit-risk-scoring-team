@@ -1,7 +1,7 @@
-"""T03 shared entry: fixed grouped data split, train-only LR and local evidence.
+"""统一运行简单 LR 与 WOE/IV 评分卡，共用固定分区和验证集阈值协议。
 
-Implements run_experiment(data_path, output_dir, settings) without changing
-the data or model interfaces. Later tasks add scorecard/tree evaluation.
+默认保持 T03 Baseline 行为；--models baseline scorecard 同时运行两套模型。
+训练、模型保存加载、评价及逐行证据均留在本地 artifacts/。
 """
 
 import argparse
@@ -37,6 +37,7 @@ from src.data import (  # noqa: E402
     load_dataset,
     split_dataset,
 )
+from src.scorecard import fit_scorecard, predict_scorecard
 
 ROOT = Path(__file__).resolve().parent
 
@@ -102,17 +103,76 @@ def fingerprints(features, groups):
     return [lookup[int(group)] for group in groups]
 
 
-def run_experiment(data_path, output_dir, settings: dict, *, synthetic=False):
-    """Run the T03 LR route with a frozen settings dict and return its manifest.
+def _selected_models(models):
+    """固定模型顺序，拒绝空选择、重复及尚未实现的路线。"""
+    supported = ('baseline', 'scorecard')
+    if not isinstance(models, (tuple, list)) or not models:
+        raise ValueError('models must be a nonempty list or tuple of baseline/scorecard')
+    if any(name not in supported for name in models) or len(set(models)) != len(models):
+        raise ValueError('models accepts unique baseline/scorecard names only')
+    return tuple(name for name in supported if name in models)
 
-    The existing three-argument public interface is preserved. Synthetic mode
-    must be explicit and never counts as official-data model performance.
-    Shared downstream model interfaces and configuration remain unchanged.
+
+def _predict_model(name, bundle, features):
+    """统一为保留输入索引的表；评分卡保留概率、信用分及全部分项。"""
+    if name == 'baseline':
+        result = pd.DataFrame({'probability': predict_baseline(bundle, features)}, index=features.index)
+    else:
+        result = predict_scorecard(bundle, features)
+    if not isinstance(result, pd.DataFrame) or not result.index.equals(features.index):
+        raise RuntimeError(f'{name} predictions do not preserve input row order')
+    if 'probability' not in result or not np.isfinite(result.to_numpy(dtype=float)).all():
+        raise RuntimeError(f'{name} predictions contain invalid values')
+    if not result['probability'].between(0, 1).all():
+        raise RuntimeError(f'{name} probabilities are outside [0, 1]')
+    return result
+
+
+def _model_details(name, bundle, features):
+    """保存各自的预处理契约，避免将两种 bundle 结构混用。"""
+    if name == 'baseline':
+        imputer = bundle['pipeline'].named_steps['imputer']
+        classifier = bundle['pipeline'].named_steps['classifier']
+        preprocessing = {
+            'fit_partition': 'train', 'imputation': 'median; all-missing training columns use zero',
+            'missing_indicators': [features.columns[i] for i in imputer.indicator_.features_],
+            'median_values': dict(zip(features.columns, imputer.statistics_.tolist())),
+            'scaler_mean': bundle['pipeline'].named_steps['scaler'].mean_.tolist(),
+            'transformed_columns': imputer.get_feature_names_out().tolist(),
+        }
+        model_type = 'simple_l2_lr'
+    else:
+        classifier = bundle['logistic_regression']
+        preprocessing = {
+            'fit_partition': 'train', 'binning': 'native OptBinning WOE/IV',
+            'input_features': bundle['input_features'],
+            'selected_features': bundle['selected_features'],
+            'iv_summary': bundle['iv_summary'], 'score_scale': bundle['score_scale'],
+            'missing_policy': {k: v['missing_policy'] for k, v in bundle['binning_evidence'].items()},
+        }
+        model_type = 'woe_iv_logistic_scorecard'
+    return {
+        'model': model_type, 'settings': bundle['settings'],
+        'iterations': classifier.n_iter_.tolist(), 'parameters': classifier.get_params(),
+        'preprocessing': preprocessing,
+    }
+
+
+def run_experiment(data_path, output_dir, settings: dict, *, synthetic=False, models=('baseline',)):
+    """共用一次数据切分运行选定模型；原有三参数调用默认仍运行 Baseline。
+
+    两套模型均只在训练集拟合。所有模型的验证阈值在任何测试预测前统一
+    保存。metrics/model/preprocessing 保留首个模型的 T03 兼容视图；
+    models 与 model_metrics.json 是完整的多模型结果。
     """
     input_path, output_dir = Path(data_path).resolve(), Path(output_dir).resolve()
+    chosen_models = _selected_models(models)
+    primary = chosen_models[0]
     if not isinstance(settings, dict):
         raise ValueError('settings must be a dict')
     config = json.loads(json.dumps(settings, allow_nan=False))
+    if 'scorecard' in chosen_models and not isinstance(config.get('scorecard'), dict):
+        raise ValueError('Scorecard route requires the scorecard settings dictionary')
     if not input_path.is_file():
         raise FileNotFoundError('Download official cs-training.csv from Kaggle into data/raw/ first: ' + str(input_path))
     source_hash = sha256(input_path)
@@ -121,14 +181,14 @@ def run_experiment(data_path, output_dir, settings: dict, *, synthetic=False):
     if output_dir.is_relative_to(ROOT) and not output_dir.is_relative_to(ROOT / 'artifacts'):
         raise ValueError('Local models and row-level evidence must stay under artifacts/')
     if type(config.get('seed')) is not int or config['seed'] != 42:
-        raise ValueError('T03 must reuse the shared seed=42 partition')
+        raise ValueError('T03/T04 must reuse the shared seed=42 partition')
     if config.get('split') != {'train': 0.7, 'validation': 0.15, 'test': 0.15, 'unit': 'cleaned_feature_group'}:
-        raise ValueError('T03 requires the shared 70/15/15 cleaned-feature-group split')
+        raise ValueError('T03/T04 require the shared 70/15/15 cleaned-feature-group split')
     if config.get('threshold') != {
         'selection_data': 'validation', 'method': 'max_tpr_minus_fpr',
         'tie_break': 'largest_finite_threshold_in_0_1',
     }:
-        raise ValueError('T03 requires the agreed validation-only threshold rule')
+        raise ValueError('T03/T04 require the agreed validation-only threshold rule')
     acquisition = None
     source_metadata = input_path.with_suffix('.source.json')
     if source_metadata.is_file():
@@ -140,6 +200,8 @@ def run_experiment(data_path, output_dir, settings: dict, *, synthetic=False):
     if acquisition is not None:
         write_json(output_dir / 'acquisition.json', acquisition)
     code_paths = ['src/data.py', 'src/baseline.py', 'run_pipeline.py', 'experiments/morebadly/run_t03.py']
+    if 'scorecard' in chosen_models:
+        code_paths.append('src/scorecard.py')
     source_code_hashes = {p: sha256(ROOT / p) for p in code_paths}
     write_json(output_dir / 'config.json', config)
     config_hash = sha256(output_dir / 'config.json')
@@ -156,37 +218,65 @@ def run_experiment(data_path, output_dir, settings: dict, *, synthetic=False):
     repeated = split_dataset(features, y, seed=config['seed'])
     if not all(np.array_equal(positions[name], repeated[name]) for name in positions):
         raise RuntimeError('Split is not reproducible')
-    bundle = fit_baseline(features.iloc[positions['train']], y.iloc[positions['train']], config)
-    train_probability = predict_baseline(bundle, features.iloc[positions['train']])
-    validation_probability = predict_baseline(bundle, features.iloc[positions['validation']])
-    threshold = validation_threshold(y.iloc[positions['validation']], validation_probability)
-    selection = {
-        'fixed_at': datetime.now(timezone(timedelta(hours=8))).isoformat(),
-        'model': 'simple_l2_lr', 'settings': bundle['settings'],
-        'threshold': threshold, 'source': 'validation', 'test_used_for_selection': False,
+
+    bundles, frames, selections, details = {}, {}, {}, {}
+    for name in chosen_models:
+        train_pos, validation_pos = positions['train'], positions['validation']
+        train_x, train_y = features.iloc[train_pos], y.iloc[train_pos]
+        bundle = (fit_baseline(train_x, train_y, config) if name == 'baseline'
+                  else fit_scorecard(train_x, train_y, config['scorecard']))
+        bundles[name] = bundle
+        details[name] = _model_details(name, bundle, features)
+        frames[name] = {
+            part: _predict_model(name, bundle, features.iloc[positions[part]])
+            for part in ('train', 'validation')
+        }
+        threshold = validation_threshold(
+            y.iloc[validation_pos], frames[name]['validation']['probability'].to_numpy()
+        )
+        selections[name] = {
+            'fixed_at': datetime.now(timezone(timedelta(hours=8))).isoformat(),
+            'model': details[name]['model'], 'settings': bundle['settings'],
+            'threshold': threshold, 'source': 'validation', 'test_used_for_selection': False,
+        }
+    # Freeze every model's decision before the first test prediction.
+    write_json(output_dir / 'selections.json', selections)
+    write_json(output_dir / 'selection.json', selections[primary])
+    for name in chosen_models:
+        frames[name]['test'] = _predict_model(name, bundles[name], features.iloc[positions['test']])
+
+    roundtrip_errors = {}
+    for name in chosen_models:
+        joblib.dump(bundles[name], output_dir / f'{name}.joblib')
+        restored = joblib.load(output_dir / f'{name}.joblib')
+        maximum = 0.0
+        for part, pos in positions.items():
+            before = frames[name][part]
+            after = _predict_model(name, restored, features.iloc[pos])
+            maximum = max(maximum, float(np.max(np.abs(before.to_numpy() - after.to_numpy()))))
+            if not before.equals(after):
+                raise RuntimeError(f'Saved/loaded {name} changed predictions or score components')
+        roundtrip_errors[name] = maximum
+
+    all_metrics = {
+        name: {
+            part: metrics(y.iloc[pos], frames[name][part]['probability'].to_numpy(), selections[name]['threshold'])
+            for part, pos in positions.items()
+        }
+        for name in chosen_models
     }
-    # Write the frozen decision before any test predictions or test metrics.
-    write_json(output_dir / 'selection.json', selection)
-    test_probability = predict_baseline(bundle, features.iloc[positions['test']])
-    probabilities = {'train': train_probability, 'validation': validation_probability, 'test': test_probability}
-    joblib.dump(bundle, output_dir / 'baseline.joblib')
-    restored = joblib.load(output_dir / 'baseline.joblib')
-    max_difference = 0.0
-    for name, pos in positions.items():
-        restored_probability = predict_baseline(restored, features.iloc[pos])
-        difference = float(np.max(np.abs(restored_probability - probabilities[name])))
-        max_difference = max(max_difference, difference)
-        if not np.array_equal(restored_probability, probabilities[name]):
-            raise RuntimeError('Saved/loaded model changed probabilities')
-    result_metrics = {name: metrics(y.iloc[pos], probabilities[name], threshold) for name, pos in positions.items()}
-    write_json(output_dir / 'metrics.json', result_metrics)
+    write_json(output_dir / 'metrics.json', all_metrics[primary])
+    write_json(output_dir / 'model_metrics.json', all_metrics)
+    pd.DataFrame([
+        {'model': name, 'model_type': details[name]['model'], 'partition': part, **values}
+        for name in chosen_models for part, values in all_metrics[name].items()
+    ]).to_csv(output_dir / 'model_comparison.csv', index=False)
     partition = np.full(len(raw), '', dtype=object)
-    prediction = np.empty(len(raw))
     split_summary = {}
-    for name, pos in positions.items():
-        partition[pos], prediction[pos] = name, probabilities[name]
-        split_summary[name] = {
-            'rows': len(pos), 'groups': len(group_sets[name]),
+    for part, pos in positions.items():
+        partition[pos] = part
+        split_summary[part] = {
+            'rows': len(pos), 'groups': len(group_sets[part]),
             'positive': int(y.iloc[pos].sum()), 'positive_rate': float(y.iloc[pos].mean()),
         }
     evidence = pd.DataFrame({
@@ -195,22 +285,52 @@ def run_experiment(data_path, output_dir, settings: dict, *, synthetic=False):
         'group_id': groups, 'group_fingerprint': fingerprints(features, groups), 'partition': partition,
     })
     evidence.to_csv(output_dir / 'split_members.csv', index=False)
-    evidence.assign(y=y.to_numpy(), probability=prediction).to_csv(output_dir / 'predictions.csv', index=False)
+    for name in chosen_models:
+        combined = pd.DataFrame(index=features.index, columns=frames[name]['train'].columns, dtype=float)
+        for part, pos in positions.items():
+            combined.iloc[pos] = frames[name][part].to_numpy()
+        prediction_table = pd.concat([evidence.assign(y=y.to_numpy()), combined.reset_index(drop=True)], axis=1)
+        prediction_table.to_csv(output_dir / f'{name}_predictions.csv', index=False)
+        if name == primary:
+            evidence.assign(y=y.to_numpy(), probability=combined['probability'].to_numpy()).to_csv(
+                output_dir / 'predictions.csv', index=False
+            )
+    if 'scorecard' in chosen_models:
+        card = bundles['scorecard']
+        write_json(output_dir / 'scorecard_binning.json', {
+            'input_features': card['input_features'], 'selected_features': card['selected_features'],
+            'settings': card['settings'], 'score_scale': card['score_scale'],
+            'iv_summary': card['iv_summary'], 'binning_evidence': card['binning_evidence'],
+        })
     np.savez_compressed(output_dir / 'split_positions.npz', **positions)
     if sha256(input_path) != source_hash or sha256(output_dir / 'config.json') != config_hash or any(
         sha256(ROOT / p) != value for p, value in source_code_hashes.items()
     ):
         raise RuntimeError('Data, config or source code changed during the experiment')
+    status = 'synthetic_engineering_check' if synthetic else 'completed_official_data_experiment'
+    max_difference = max(roundtrip_errors.values())
     write_json(output_dir / 'run.log', {
         'started_at': started_at, 'completed_at': datetime.now(timezone(timedelta(hours=8))).isoformat(),
-        'status': 'synthetic_engineering_check' if synthetic else 'completed_official_data_experiment',
-        'model': 'simple_l2_lr', 'rows': len(raw), 'group_overlap': overlap,
+        'status': status, 'models': list(chosen_models), 'model': details[primary]['model'],
+        'rows': len(raw), 'group_overlap': overlap,
         'saved_loaded_max_probability_difference': max_difference,
     })
-    imputer = bundle['pipeline'].named_steps['imputer']
+    model_records = {
+        name: {
+            **selections[name], 'iterations': details[name]['iterations'],
+            'parameters': details[name]['parameters'], 'preprocessing': details[name]['preprocessing'],
+            'metrics': all_metrics[name], 'artifact': f'{name}.joblib',
+            'predictions': f'{name}_predictions.csv',
+            'saved_loaded_max_output_difference': roundtrip_errors[name],
+        }
+        for name in chosen_models
+    }
+    packages = ['numpy', 'pandas', 'scipy', 'scikit-learn', 'joblib']
+    if 'scorecard' in chosen_models:
+        packages.append('optbinning')
     record = {
-        'status': 'synthetic_engineering_check' if synthetic else 'completed_official_data_experiment',
-        'executor': 'morebadly / Guo Yuzhe; Codex assisted execution; personal reproduction pending',
+        'status': status,
+        'executor': 'Team shared entry; personal reproduction and explanation recorded separately',
         'created_at': datetime.now(timezone(timedelta(hours=8))).isoformat(),
         'source': {'file': input_path.name, 'sha256': source_hash, 'rows': len(raw),
                    'official_url': None if synthetic else 'https://www.kaggle.com/competitions/GiveMeSomeCredit/data',
@@ -219,45 +339,41 @@ def run_experiment(data_path, output_dir, settings: dict, *, synthetic=False):
         'feature_columns': list(features.columns), 'split': split_summary,
         'split_settings': {**config['split'], 'seed': config['seed'], 'stratification': 'group_max_y'},
         'audit': {'all_rows_once': True, 'group_overlap': overlap, 'seed_reproducible': True,
-                  'saved_loaded_max_probability_difference': max_difference},
-        'preprocessing': {
-            'fit_partition': 'train', 'imputation': 'median; all-missing training columns use zero',
-            'missing_indicators': [features.columns[i] for i in imputer.indicator_.features_],
-            'median_values': dict(zip(features.columns, imputer.statistics_.tolist())),
-            'scaler_mean': bundle['pipeline'].named_steps['scaler'].mean_.tolist(),
-            'transformed_columns': imputer.get_feature_names_out().tolist(),
-        },
-        'model': {**selection, 'iterations': bundle['pipeline'].named_steps['classifier'].n_iter_.tolist(),
-                  'parameters': bundle['pipeline'].named_steps['classifier'].get_params()},
-        'metrics': result_metrics,
-        'environment': {'python': platform.python_version(), 'packages': {
-            p: version(p) for p in ['numpy', 'pandas', 'scipy', 'scikit-learn', 'joblib']
-        }},
+                  'saved_loaded_max_probability_difference': max_difference,
+                  'all_models_frozen_before_test_prediction': True},
+        'selected_models': list(chosen_models), 'models': model_records,
+        'preprocessing': details[primary]['preprocessing'],
+        'model': {**selections[primary], 'iterations': details[primary]['iterations'],
+                  'parameters': details[primary]['parameters']},
+        'metrics': all_metrics[primary],
+        'environment': {'python': platform.python_version(), 'packages': {p: version(p) for p in packages}},
         'git': {'commit': git_value('rev-parse', 'HEAD'), 'branch': git_value('branch', '--show-current'),
                 'working_tree_changes': git_value('status', '--short')},
         'code_sha256': source_code_hashes, 'config_sha256': config_hash,
-        'entry_point': 'run_pipeline.run_experiment',
-        'command': None,
+        'entry_point': 'run_pipeline.run_experiment', 'command': None,
         'reproduction_command': ['python', 'run_pipeline.py', '--input', str(input_path),
                                  '--output', '<new-output-directory>', '--config',
-                                 str(output_dir / 'config.json')] + (['--synthetic'] if synthetic else []),
+                                 str(output_dir / 'config.json'), '--models', *chosen_models]
+                                + (['--synthetic'] if synthetic else []),
         'output_sha256': {p.name: sha256(p) for p in output_dir.iterdir() if p.is_file()},
-        'limitations': ['Internal research partitions, not out-of-time or customer-external validation.',
-                        'Training metrics are apparent performance; no tuning used test metrics.',
-                        'Scorecard, LightGBM, SHAP and UI are later tasks; this entry runs only the T03 LR route.'],
+        'limitations': [
+            'Internal research partitions, not out-of-time or customer-external validation.',
+            'Training metrics are apparent performance; no tuning used test metrics.',
+            'LightGBM, shared evaluation plots, SHAP and UI remain later tasks.',
+        ],
     }
     write_json(output_dir / 'record.json', record)
     return record
 
 
 def run_from_config(data_path, output_dir, config_path=ROOT / 'configs/experiment.json', *,
-                    synthetic=False, entry_script='run_pipeline.py'):
-    """Read a config file once and record its bytes as well as the saved snapshot."""
+                    synthetic=False, entry_script='run_pipeline.py', models=('baseline',)):
+    """读取一次配置，保存原始哈希，并验证运行期间没有改变。"""
     config_path = Path(config_path).resolve()
     source_bytes = config_path.read_bytes()
     original_hash = hashlib.sha256(source_bytes).hexdigest()
     settings = json.loads(source_bytes.decode('utf-8'))
-    record = run_experiment(data_path, output_dir, settings, synthetic=synthetic)
+    record = run_experiment(data_path, output_dir, settings, synthetic=synthetic, models=models)
     record['config_source'] = {'path': str(config_path), 'sha256': original_hash}
     if not config_path.is_file() or sha256(config_path) != original_hash:
         record['status'] = 'failed_config_provenance'
@@ -267,7 +383,8 @@ def run_from_config(data_path, output_dir, config_path=ROOT / 'configs/experimen
         write_json(Path(output_dir) / 'record.json', record)
         raise RuntimeError(record['error'])
     record['command'] = ['python', entry_script, '--input', str(Path(data_path).resolve()),
-                         '--output', str(Path(output_dir).resolve()), '--config', str(config_path)]
+                         '--output', str(Path(output_dir).resolve()), '--config', str(config_path),
+                         '--models', *record['selected_models']]
     if synthetic:
         record['command'].append('--synthetic')
     write_json(Path(output_dir) / 'record.json', record)
@@ -279,16 +396,22 @@ def main(entry_script='run_pipeline.py'):
     parser.add_argument('--input', type=Path, default=ROOT / 'data/raw/cs-training.csv')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--config', type=Path, default=ROOT / 'configs/experiment.json')
+    parser.add_argument('--models', nargs='+', choices=['baseline', 'scorecard'], default=['baseline'],
+                        help='选择 baseline、scorecard，或同时选择两者；默认 baseline')
     parser.add_argument('--synthetic', action='store_true', help='Engineering check only; never counts as official data results')
     args = parser.parse_args()
-    output = args.output or ROOT / 'artifacts/morebadly' / (
-        'T03-' + datetime.now(timezone(timedelta(hours=8))).strftime('%Y%m%d-%H%M%S') + '-' + uuid4().hex[:8]
+    output = args.output or ROOT / 'artifacts/team' / (
+        'T03-T04-' + datetime.now(timezone(timedelta(hours=8))).strftime('%Y%m%d-%H%M%S') + '-' + uuid4().hex[:8]
     )
     try:
-        record = run_from_config(args.input, output, args.config, synthetic=args.synthetic, entry_script=entry_script)
-    except (FileNotFoundError, ValueError, RuntimeError) as error:
-        parser.exit(1, f'T03 failed: {error}\n')
-    print(json.dumps({'output': str(output.resolve()), 'status': record['status'], 'metrics': record['metrics']}, indent=2))
+        record = run_from_config(args.input, output, args.config, synthetic=args.synthetic,
+                                 entry_script=entry_script, models=args.models)
+    except (FileNotFoundError, ValueError, RuntimeError, TypeError) as error:
+        parser.exit(1, f'T03/T04 failed: {error}\n')
+    print(json.dumps({
+        'output': str(output.resolve()), 'status': record['status'], 'metrics': record['metrics'],
+        'models': {name: value['metrics'] for name, value in record['models'].items()},
+    }, indent=2))
 
 
 if __name__ == '__main__':

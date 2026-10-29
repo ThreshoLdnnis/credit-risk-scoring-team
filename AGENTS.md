@@ -1,6 +1,6 @@
 # 本仓库的 AI 辅助开发约定
 
-- 本工程从零开工，当前业务函数是待实现骨架。不要把 TODO 当成已完成，也不要编造实验指标或成员完成状态。
+- 本工程由团队从零实现，各模块完成状态以 main 中的代码、测试和真实记录为准。不要把 TODO 当成已完成，也不要编造实验指标或成员完成状态。
 - 只改本人认领 Issue 的路径；不批量格式化、覆盖或重命名同伴模块。接口、配置、依赖和集成入口的变更先与负责人及上下游对齐。
 - 主责账号：吴晓亦=Sally-yi，杨曦=Clement-xi，郭宇哲=morebadly。
 - 主责固定：吴晓亦负责数据（src/data.py、src/eda.py）；杨曦负责评分卡与界面（src/scorecard.py、app.py）；郭宇哲负责模型、评价和解释（src/baseline.py、src/tree_model.py、src/evaluation.py、src/explanation.py）。对应模块测试与说明同责，共享文件由项目负责人统筹。

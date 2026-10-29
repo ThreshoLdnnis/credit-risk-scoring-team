@@ -248,7 +248,7 @@ def test_missing_data_has_actionable_error(runner, tmp_path):
 def test_runner_refuses_different_shared_partition_or_selection_protocol(runner, tmp_path, setting, value):
     source = tmp_path / 'synthetic.csv'
     source.write_text('engineering check only', encoding='utf-8')
-    config = json.loads((runner.ROOT / 'configs/experiment.json').read_text())
+    config = json.loads((runner.ROOT / 'configs/experiment.json').read_text(encoding='utf-8'))
     config[setting] = value
     config_path = tmp_path / 'config.json'
     config_path.write_text(json.dumps(config), encoding='utf-8')

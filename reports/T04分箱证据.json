@@ -1,0 +1,1031 @@
+{
+  "input_features": [
+    "RevolvingUtilizationOfUnsecuredLines",
+    "age",
+    "NumberOfTime30-59DaysPastDueNotWorse",
+    "DebtRatio",
+    "MonthlyIncome",
+    "NumberOfOpenCreditLinesAndLoans",
+    "NumberOfTimes90DaysLate",
+    "NumberRealEstateLoansOrLines",
+    "NumberOfTime60-89DaysPastDueNotWorse",
+    "NumberOfDependents",
+    "NumberOfTime30-59DaysPastDueNotWorse__special",
+    "NumberOfTimes90DaysLate__special",
+    "NumberOfTime60-89DaysPastDueNotWorse__special"
+  ],
+  "selected_features": [
+    "RevolvingUtilizationOfUnsecuredLines",
+    "age",
+    "NumberOfTime30-59DaysPastDueNotWorse",
+    "DebtRatio",
+    "MonthlyIncome",
+    "NumberOfOpenCreditLinesAndLoans",
+    "NumberOfTimes90DaysLate",
+    "NumberRealEstateLoansOrLines",
+    "NumberOfTime60-89DaysPastDueNotWorse",
+    "NumberOfDependents"
+  ],
+  "settings": {
+    "backend": "optbinning",
+    "max_n_bins": 5,
+    "min_iv": 0.02,
+    "C": 1.0,
+    "base_score": 600.0,
+    "base_odds": 20.0,
+    "pdo": 20.0
+  },
+  "score_scale": {
+    "base_score": 600.0,
+    "base_odds": 20.0,
+    "pdo": 20.0,
+    "factor": 28.85390081777927,
+    "offset": 513.5614381022527,
+    "formula": "score = offset - factor * logit(P(y=1))"
+  },
+  "iv_summary": {
+    "RevolvingUtilizationOfUnsecuredLines": {
+      "iv": 1.1095830313205635,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "age": {
+      "iv": 0.24978104411101287,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "NumberOfTime30-59DaysPastDueNotWorse": {
+      "iv": 0.7390693048942371,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "DebtRatio": {
+      "iv": 0.08412297817318828,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "MonthlyIncome": {
+      "iv": 0.08027865459606978,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "NumberOfOpenCreditLinesAndLoans": {
+      "iv": 0.07903143858151492,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "NumberOfTimes90DaysLate": {
+      "iv": 0.8383577466655504,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "NumberRealEstateLoansOrLines": {
+      "iv": 0.05236701254649528,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "NumberOfTime60-89DaysPastDueNotWorse": {
+      "iv": 0.0405783743129427,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "NumberOfDependents": {
+      "iv": 0.035598789746933215,
+      "selected": true,
+      "threshold_inclusive": true
+    },
+    "NumberOfTime30-59DaysPastDueNotWorse__special": {
+      "iv": 0.0,
+      "selected": false,
+      "threshold_inclusive": true
+    },
+    "NumberOfTimes90DaysLate__special": {
+      "iv": 0.0,
+      "selected": false,
+      "threshold_inclusive": true
+    },
+    "NumberOfTime60-89DaysPastDueNotWorse__special": {
+      "iv": 0.0,
+      "selected": false,
+      "threshold_inclusive": true
+    }
+  },
+  "binning_evidence": {
+    "RevolvingUtilizationOfUnsecuredLines": {
+      "status": "OPTIMAL",
+      "iv": 1.1095830313205635,
+      "splits": [
+        0.13133154809474945,
+        0.41542568802833557,
+        0.6780458092689514,
+        0.9126169979572296
+      ],
+      "missing_seen_in_training": false,
+      "missing_policy": "unseen missing values map to zero WoE",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 0.13)",
+          "Count": 49662,
+          "Count (%)": 0.47308857431363954,
+          "Non-event": 48768,
+          "Event": 894,
+          "Event rate": 0.01800169143409448,
+          "WoE": 1.3630837427766078,
+          "IV": 0.5049808987518619,
+          "JS": 0.05864906912312089
+        },
+        {
+          "Bin": "[0.13, 0.42)",
+          "Count": 22387,
+          "Count (%)": 0.2132623316249738,
+          "Non-event": 21473,
+          "Event": 914,
+          "Event rate": 0.040827265823915666,
+          "WoE": 0.5206809184167862,
+          "IV": 0.04632713244647232,
+          "JS": 0.005726350581876007
+        },
+        {
+          "Bin": "[0.42, 0.68)",
+          "Count": 11325,
+          "Count (%)": 0.10788385695505553,
+          "Non-event": 10376,
+          "Event": 949,
+          "Event rate": 0.08379690949227372,
+          "WoE": -0.24419819370984408,
+          "IV": 0.007154665497639482,
+          "JS": 0.0008921176436551591
+        },
+        {
+          "Bin": "[0.68, 0.91)",
+          "Count": 8156,
+          "Count (%)": 0.0776954293444091,
+          "Non-event": 6924,
+          "Event": 1232,
+          "Event rate": 0.1510544384502207,
+          "WoE": -0.9096853488935615,
+          "IV": 0.09539305528985643,
+          "JS": 0.01152927654255953
+        },
+        {
+          "Bin": "[0.91, inf)",
+          "Count": 13444,
+          "Count (%)": 0.128069807761922,
+          "Non-event": 10415,
+          "Event": 3029,
+          "Event rate": 0.22530496875929784,
+          "WoE": -1.4010255784283612,
+          "IV": 0.4557272793347334,
+          "JS": 0.0527209668552961
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        }
+      ]
+    },
+    "age": {
+      "status": "OPTIMAL",
+      "iv": 0.24978104411101287,
+      "splits": [
+        43.5,
+        55.5,
+        62.5,
+        67.5
+      ],
+      "missing_seen_in_training": true,
+      "missing_policy": "native empirical WoE from the fitted missing bin",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 43.50)",
+          "Count": 31135,
+          "Count (%)": 0.2965972526530379,
+          "Non-event": 28028,
+          "Event": 3107,
+          "Event rate": 0.09979123173277661,
+          "WoE": -0.43649374099881877,
+          "IV": 0.06835066727446884,
+          "JS": 0.008476646809359813
+        },
+        {
+          "Bin": "[43.50, 55.50)",
+          "Count": 30463,
+          "Count (%)": 0.2901956674986187,
+          "Non-event": 28119,
+          "Event": 2344,
+          "Event rate": 0.07694580310540657,
+          "WoE": -0.15145348837850392,
+          "IV": 0.007109353320812354,
+          "JS": 0.0008878207865867932
+        },
+        {
+          "Bin": "[55.50, 62.50)",
+          "Count": 16770,
+          "Count (%)": 0.15975384380894317,
+          "Non-event": 15914,
+          "Event": 856,
+          "Event rate": 0.051043530113297556,
+          "WoE": 0.2866440066995417,
+          "IV": 0.011605821645298874,
+          "JS": 0.0014457814064724912
+        },
+        {
+          "Bin": "[62.50, 67.50)",
+          "Count": 10074,
+          "Count (%)": 0.09596662030598054,
+          "Non-event": 9741,
+          "Event": 333,
+          "Event rate": 0.033055390113162594,
+          "WoE": 0.7399164496943156,
+          "IV": 0.03847061736458537,
+          "JS": 0.004702048016197242
+        },
+        {
+          "Bin": "[67.50, inf)",
+          "Count": 16531,
+          "Count (%)": 0.15747708956503514,
+          "Non-event": 16153,
+          "Event": 378,
+          "Event rate": 0.02286613030064727,
+          "WoE": 1.1189267531979743,
+          "IV": 0.12424458450584744,
+          "JS": 0.014767943228583855
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 1,
+          "Count (%)": 9.526168384552365e-06,
+          "Non-event": 1,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        }
+      ]
+    },
+    "NumberOfTime30-59DaysPastDueNotWorse": {
+      "status": "OPTIMAL",
+      "iv": 0.7390693048942371,
+      "splits": [
+        0.5,
+        1.5
+      ],
+      "missing_seen_in_training": true,
+      "missing_policy": "native empirical WoE from the fitted missing bin",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 0.50)",
+          "Count": 88059,
+          "Count (%)": 0.8388648617752967,
+          "Non-event": 84525,
+          "Event": 3534,
+          "Event rate": 0.04013218410383947,
+          "WoE": 0.5385768536002491,
+          "IV": 0.19352420891570793,
+          "JS": 0.023902333872889148
+        },
+        {
+          "Bin": "[0.50, 1.50)",
+          "Count": 11337,
+          "Count (%)": 0.10799817097567016,
+          "Non-event": 9656,
+          "Event": 1681,
+          "Event rate": 0.14827555790773572,
+          "WoE": -0.8878494917274442,
+          "IV": 0.12514421518367494,
+          "JS": 0.015148666840169998
+        },
+        {
+          "Bin": "[1.50, inf)",
+          "Count": 5393,
+          "Count (%)": 0.0513746260978909,
+          "Non-event": 3694,
+          "Event": 1699,
+          "Event rate": 0.3150380122380864,
+          "WoE": -1.859370082008943,
+          "IV": 0.38001983324668054,
+          "JS": 0.041659859953813355
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 185,
+          "Count (%)": 0.0017623411511421877,
+          "Non-event": 81,
+          "Event": 104,
+          "Event rate": 0.5621621621621622,
+          "WoE": -2.88598186556513,
+          "IV": 0.04038104754817358,
+          "JS": 0.0038044797698918113
+        }
+      ]
+    },
+    "DebtRatio": {
+      "status": "OPTIMAL",
+      "iv": 0.08412297817318828,
+      "splits": [
+        0.42335185408592224,
+        0.725102961063385,
+        3.9773051738739014,
+        998.5
+      ],
+      "missing_seen_in_training": false,
+      "missing_policy": "unseen missing values map to zero WoE",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 0.42)",
+          "Count": 58805,
+          "Count (%)": 0.5601863318536019,
+          "Non-event": 55360,
+          "Event": 3445,
+          "Event rate": 0.058583453787943204,
+          "WoE": 0.14089328574759596,
+          "IV": 0.01046430044253576,
+          "JS": 0.0013069567219257047
+        },
+        {
+          "Bin": "[0.42, 0.73)",
+          "Count": 17073,
+          "Count (%)": 0.16264027282946253,
+          "Non-event": 15616,
+          "Event": 1457,
+          "Event rate": 0.08533942482281966,
+          "WoE": -0.2641236186385272,
+          "IV": 0.012728246861498075,
+          "JS": 0.0015864222472266373
+        },
+        {
+          "Bin": "[0.73, 3.98)",
+          "Count": 8087,
+          "Count (%)": 0.07703812372587499,
+          "Non-event": 7098,
+          "Event": 989,
+          "Event rate": 0.12229504142450848,
+          "WoE": -0.6651661195124665,
+          "IV": 0.04553875918609776,
+          "JS": 0.005589672977084077
+        },
+        {
+          "Bin": "[3.98, 998.50)",
+          "Count": 9204,
+          "Count (%)": 0.08767885381141997,
+          "Non-event": 8618,
+          "Event": 586,
+          "Event rate": 0.06366797044763146,
+          "WoE": 0.05224840750257442,
+          "IV": 0.00023400512204271084,
+          "JS": 2.9247313575736598e-05
+        },
+        {
+          "Bin": "[998.50, inf)",
+          "Count": 11805,
+          "Count (%)": 0.11245641777964067,
+          "Non-event": 11264,
+          "Event": 541,
+          "Event rate": 0.0458280389665396,
+          "WoE": 0.3999076784551461,
+          "IV": 0.015157666561013984,
+          "JS": 0.0018821828623261216
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        }
+      ]
+    },
+    "MonthlyIncome": {
+      "status": "OPTIMAL",
+      "iv": 0.08027865459606978,
+      "splits": [
+        1526.0,
+        4560.5,
+        6596.5,
+        9831.0
+      ],
+      "missing_seen_in_training": true,
+      "missing_policy": "native empirical WoE from the fitted missing bin",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 1526.00)",
+          "Count": 5438,
+          "Count (%)": 0.05180330367519576,
+          "Non-event": 5041,
+          "Event": 397,
+          "Event rate": 0.07300478116954763,
+          "WoE": -0.09461664770075595,
+          "IV": 0.0004832017492664418,
+          "JS": 6.037769867649136e-05
+        },
+        {
+          "Bin": "[1526.00, 4560.50)",
+          "Count": 28491,
+          "Count (%)": 0.2714100634442814,
+          "Non-event": 25871,
+          "Event": 2620,
+          "Event rate": 0.09195886420273068,
+          "WoE": -0.34609178860581746,
+          "IV": 0.037799230997981034,
+          "JS": 0.0047014630871164
+        },
+        {
+          "Bin": "[4560.50, 6596.50)",
+          "Count": 18780,
+          "Count (%)": 0.17890144226189342,
+          "Non-event": 17451,
+          "Event": 1329,
+          "Event rate": 0.07076677316293929,
+          "WoE": -0.06106994723057024,
+          "IV": 0.0006851300593255986,
+          "JS": 8.56279514651441e-05
+        },
+        {
+          "Bin": "[6596.50, 9831.00)",
+          "Count": 17416,
+          "Count (%)": 0.165907748585364,
+          "Non-event": 16476,
+          "Event": 940,
+          "Event rate": 0.05397335783187873,
+          "WoE": 0.22774005919572549,
+          "IV": 0.007801616649873546,
+          "JS": 0.0009731000573062788
+        },
+        {
+          "Bin": "[9831.00, inf)",
+          "Count": 14121,
+          "Count (%)": 0.13451902375826394,
+          "Non-event": 13521,
+          "Event": 600,
+          "Event rate": 0.04248990864669641,
+          "WoE": 0.4790295350464153,
+          "IV": 0.025166735478007497,
+          "JS": 0.0031161047597404196
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 20728,
+          "Count (%)": 0.19745841827500143,
+          "Non-event": 19596,
+          "Event": 1132,
+          "Event rate": 0.054612118873021996,
+          "WoE": 0.2152993628991413,
+          "IV": 0.008342739661615663,
+          "JS": 0.001040832959036479
+        }
+      ]
+    },
+    "NumberOfOpenCreditLinesAndLoans": {
+      "status": "OPTIMAL",
+      "iv": 0.07903143858151492,
+      "splits": [
+        2.5,
+        3.5,
+        5.5,
+        14.5
+      ],
+      "missing_seen_in_training": false,
+      "missing_policy": "unseen missing values map to zero WoE",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 2.50)",
+          "Count": 9130,
+          "Count (%)": 0.08697391735096309,
+          "Non-event": 7964,
+          "Event": 1166,
+          "Event rate": 0.12771084337349398,
+          "WoE": -0.7146878228225468,
+          "IV": 0.06063582417246898,
+          "JS": 0.007422178419085445
+        },
+        {
+          "Bin": "[2.50, 3.50)",
+          "Count": 6362,
+          "Count (%)": 0.06060548326252215,
+          "Non-event": 5882,
+          "Event": 480,
+          "Event rate": 0.07544797233574348,
+          "WoE": -0.13017410588419231,
+          "IV": 0.0010867176590882747,
+          "JS": 0.000135743878394475
+        },
+        {
+          "Bin": "[3.50, 5.50)",
+          "Count": 17089,
+          "Count (%)": 0.16279269152361536,
+          "Non-event": 16016,
+          "Event": 1073,
+          "Event rate": 0.06278892855052957,
+          "WoE": 0.0670896378281074,
+          "IV": 0.0007117820445682064,
+          "JS": 8.89560731541783e-05
+        },
+        {
+          "Bin": "[5.50, 14.50)",
+          "Count": 60064,
+          "Count (%)": 0.5721797778497533,
+          "Non-event": 56650,
+          "Event": 3414,
+          "Event rate": 0.05683937133724028,
+          "WoE": 0.17296724200557012,
+          "IV": 0.015888338239077593,
+          "JS": 0.0019835702377440853
+        },
+        {
+          "Bin": "[14.50, inf)",
+          "Count": 12329,
+          "Count (%)": 0.11744813001314611,
+          "Non-event": 11444,
+          "Event": 885,
+          "Event rate": 0.07178197745153703,
+          "WoE": -0.07640691193412463,
+          "IV": 0.0007087764663118556,
+          "JS": 8.857551328365562e-05
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        }
+      ]
+    },
+    "NumberOfTimes90DaysLate": {
+      "status": "OPTIMAL",
+      "iv": 0.8383577466655504,
+      "splits": [
+        0.5
+      ],
+      "missing_seen_in_training": true,
+      "missing_policy": "native empirical WoE from the fitted missing bin",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 0.50)",
+          "Count": 99104,
+          "Count (%)": 0.9440813915826776,
+          "Non-event": 94520,
+          "Event": 4584,
+          "Event rate": 0.04625443978043268,
+          "WoE": 0.3901993518100726,
+          "IV": 0.12164288547644862,
+          "JS": 0.015109626582307412
+        },
+        {
+          "Bin": "[0.50, inf)",
+          "Count": 5685,
+          "Count (%)": 0.0541562672661802,
+          "Non-event": 3355,
+          "Event": 2330,
+          "Event rate": 0.4098504837291117,
+          "WoE": -2.27145661825016,
+          "IV": 0.6763338136409281,
+          "JS": 0.07005555026511304
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 185,
+          "Count (%)": 0.0017623411511421877,
+          "Non-event": 81,
+          "Event": 104,
+          "Event rate": 0.5621621621621622,
+          "WoE": -2.88598186556513,
+          "IV": 0.04038104754817358,
+          "JS": 0.0038044797698918113
+        }
+      ]
+    },
+    "NumberRealEstateLoansOrLines": {
+      "status": "OPTIMAL",
+      "iv": 0.05236701254649528,
+      "splits": [
+        0.5,
+        1.5,
+        2.5
+      ],
+      "missing_seen_in_training": false,
+      "missing_policy": "unseen missing values map to zero WoE",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 0.50)",
+          "Count": 39394,
+          "Count (%)": 0.3752738773410559,
+          "Non-event": 36144,
+          "Event": 3250,
+          "Event rate": 0.08249987307711834,
+          "WoE": -0.2271841577121947,
+          "IV": 0.02138096148774816,
+          "JS": 0.0026668874362220027
+        },
+        {
+          "Bin": "[0.50, 1.50)",
+          "Count": 36624,
+          "Count (%)": 0.34888639091584583,
+          "Non-event": 34692,
+          "Event": 1932,
+          "Event rate": 0.052752293577981654,
+          "WoE": 0.2519132559356869,
+          "IV": 0.01986761861118362,
+          "JS": 0.0024769064003174746
+        },
+        {
+          "Bin": "[1.50, 2.50)",
+          "Count": 21972,
+          "Count (%)": 0.20930897174538457,
+          "Non-event": 20729,
+          "Event": 1243,
+          "Event rate": 0.056572000728199526,
+          "WoE": 0.17796575239260415,
+          "IV": 0.006139717320848994,
+          "JS": 0.0007664534748073274
+        },
+        {
+          "Bin": "[2.50, inf)",
+          "Count": 6984,
+          "Count (%)": 0.06653075999771373,
+          "Non-event": 6391,
+          "Event": 593,
+          "Event rate": 0.08490836197021764,
+          "WoE": -0.25858849044363996,
+          "IV": 0.004978715126714492,
+          "JS": 0.0006206112259561332
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        }
+      ]
+    },
+    "NumberOfTime60-89DaysPastDueNotWorse": {
+      "status": "OPTIMAL",
+      "iv": 0.0405783743129427,
+      "splits": [],
+      "missing_seen_in_training": true,
+      "missing_policy": "native empirical WoE from the fitted missing bin",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, inf)",
+          "Count": 104789,
+          "Count (%)": 0.9982376588488578,
+          "Non-event": 97875,
+          "Event": 6914,
+          "Event rate": 0.06598020784624341,
+          "WoE": 0.014102691715338178,
+          "IV": 0.00019732676476912121,
+          "JS": 2.4665641194454406e-05
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 185,
+          "Count (%)": 0.0017623411511421877,
+          "Non-event": 81,
+          "Event": 104,
+          "Event rate": 0.5621621621621622,
+          "WoE": -2.88598186556513,
+          "IV": 0.04038104754817358,
+          "JS": 0.0038044797698918113
+        }
+      ]
+    },
+    "NumberOfDependents": {
+      "status": "OPTIMAL",
+      "iv": 0.035598789746933215,
+      "splits": [
+        0.5,
+        1.5,
+        2.5
+      ],
+      "missing_seen_in_training": true,
+      "missing_policy": "native empirical WoE from the fitted missing bin",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, 0.50)",
+          "Count": 60858,
+          "Count (%)": 0.5797435555470879,
+          "Non-event": 57269,
+          "Event": 3589,
+          "Event rate": 0.05897334779322357,
+          "WoE": 0.1338457318427082,
+          "IV": 0.009802966257567835,
+          "JS": 0.0012244569288232358
+        },
+        {
+          "Bin": "[0.50, 1.50)",
+          "Count": 18358,
+          "Count (%)": 0.17488139920361231,
+          "Non-event": 17018,
+          "Event": 1340,
+          "Event rate": 0.072992700729927,
+          "WoE": -0.09443812763165038,
+          "IV": 0.0016249521108094426,
+          "JS": 0.0002030435671146755
+        },
+        {
+          "Bin": "[1.50, 2.50)",
+          "Count": 13669,
+          "Count (%)": 0.13021319564844627,
+          "Non-event": 12563,
+          "Event": 1106,
+          "Event rate": 0.08091301485112298,
+          "WoE": -0.2060340381740584,
+          "IV": 0.006045717871589401,
+          "JS": 0.0007543808933798742
+        },
+        {
+          "Bin": "[2.50, inf)",
+          "Count": 9299,
+          "Count (%)": 0.08858383980795244,
+          "Non-event": 8435,
+          "Event": 864,
+          "Event rate": 0.09291321647488977,
+          "WoE": -0.35746789492018305,
+          "IV": 0.013226993973315723,
+          "JS": 0.00164462704164264
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 2790,
+          "Count (%)": 0.0265780097929011,
+          "Non-event": 2671,
+          "Event": 119,
+          "Event rate": 0.04265232974910394,
+          "WoE": 0.4750445989022354,
+          "IV": 0.00489815953365081,
+          "JS": 0.0006065770694575986
+        }
+      ]
+    },
+    "NumberOfTime30-59DaysPastDueNotWorse__special": {
+      "status": "OPTIMAL",
+      "iv": 0.0,
+      "splits": [],
+      "missing_seen_in_training": false,
+      "missing_policy": "unseen missing values map to zero WoE",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, inf)",
+          "Count": 104974,
+          "Count (%)": 1.0,
+          "Non-event": 97956,
+          "Event": 7018,
+          "Event rate": 0.0668546497227885,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        }
+      ]
+    },
+    "NumberOfTimes90DaysLate__special": {
+      "status": "OPTIMAL",
+      "iv": 0.0,
+      "splits": [],
+      "missing_seen_in_training": false,
+      "missing_policy": "unseen missing values map to zero WoE",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, inf)",
+          "Count": 104974,
+          "Count (%)": 1.0,
+          "Non-event": 97956,
+          "Event": 7018,
+          "Event rate": 0.0668546497227885,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        }
+      ]
+    },
+    "NumberOfTime60-89DaysPastDueNotWorse__special": {
+      "status": "OPTIMAL",
+      "iv": 0.0,
+      "splits": [],
+      "missing_seen_in_training": false,
+      "missing_policy": "unseen missing values map to zero WoE",
+      "woe_direction": "native OptBinning WoE = ln(non-event y=0 distribution / event y=1 distribution)",
+      "table": [
+        {
+          "Bin": "(-inf, inf)",
+          "Count": 104974,
+          "Count (%)": 1.0,
+          "Non-event": 97956,
+          "Event": 7018,
+          "Event rate": 0.0668546497227885,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Special",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        },
+        {
+          "Bin": "Missing",
+          "Count": 0,
+          "Count (%)": 0.0,
+          "Non-event": 0,
+          "Event": 0,
+          "Event rate": 0.0,
+          "WoE": 0.0,
+          "IV": 0.0,
+          "JS": 0.0
+        }
+      ]
+    }
+  }
+}
