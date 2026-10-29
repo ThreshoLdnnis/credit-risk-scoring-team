@@ -7,6 +7,7 @@ fitted only from the rows passed to fit_scorecard.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping
 from numbers import Integral, Real
 from typing import Any
@@ -16,7 +17,7 @@ import pandas as pd
 from scipy.special import expit
 
 # 这些键和值来自 configs/experiment.json 的 scorecard 子字典。
-# 目前假设调用方传入该子字典；集成前仍需由管线负责人确认。
+# 共享入口明确传入 settings['scorecard']，不接受包含其他模型配置的整个字典。
 _REQUIRED_SETTINGS = {
     "backend",
     "max_n_bins",
@@ -48,9 +49,10 @@ def _validate_features(features: Any, *, argument_name: str) -> pd.DataFrame:
         for column in features.columns
         if not pd.api.types.is_numeric_dtype(features[column].dtype)
         or pd.api.types.is_bool_dtype(features[column].dtype)
+        or pd.api.types.is_complex_dtype(features[column].dtype)
     ]
     if non_numeric:
-        raise TypeError(f"{argument_name} 含非数值特征列：{non_numeric!r}。")
+        raise TypeError(f"{argument_name} 含非数值或复数特征列：{non_numeric!r}。")
 
     # NaN 留给后续分箱策略处理；正负无穷不能被当作缺失或静默裁剪。
     try:
@@ -109,9 +111,9 @@ def _validate_settings(settings: Any) -> dict[str, Any]:
     """校验 configs/experiment.json 中的 scorecard 子字典。"""
     if not isinstance(settings, Mapping):
         raise TypeError(
-            "settings 必须是映射，并暂按 configs/experiment.json 的 "
+            "settings 必须是映射，并按 configs/experiment.json 的 "
             "scorecard 子字典传入；"
-            "此传递方式待集成确认。"
+            "共享入口会提取该子字典。"
         )
     missing_keys = sorted(_REQUIRED_SETTINGS - settings.keys())
     if missing_keys:
@@ -301,6 +303,8 @@ def _transform_woe(
 def fit_scorecard(train_x, train_y, settings: dict):
     """Fit train-only supervised bins, IV-selected WoE features, and L2 LR."""
     features = _validate_features(train_x, argument_name="train_x")
+    if isinstance(train_y, pd.Series) and not train_y.index.equals(features.index):
+        raise ValueError("train_y 索引必须与 train_x 的行顺序完全一致。")
     target = _validate_binary_target(train_y, expected_length=len(features))
     validated_settings = _validate_settings(settings)
     binnings, evidence, iv_values = _fit_woe_matrix(
@@ -314,13 +318,19 @@ def fit_scorecard(train_x, train_y, settings: dict):
         raise ValueError("没有特征达到 settings['min_iv']；不会继续拟合。")
 
     train_woe = _transform_woe(features, binnings, evidence, selected)
+    from sklearn.exceptions import ConvergenceWarning
     from sklearn.linear_model import LogisticRegression
 
     model = LogisticRegression(
         C=float(validated_settings["C"]), penalty="l2",
         solver="lbfgs", max_iter=2000, random_state=42,
     )
-    model.fit(train_woe.loc[:, selected], target)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", ConvergenceWarning)
+        try:
+            model.fit(train_woe.loc[:, selected], target)
+        except ConvergenceWarning as exc:
+            raise RuntimeError("评分卡 LR 未收敛；请核验训练与参数后再评价。") from exc
     factor = float(validated_settings["pdo"]) / float(np.log(2.0))
     offset = float(validated_settings["base_score"]) - factor * float(
         np.log(validated_settings["base_odds"])

@@ -1,0 +1,336 @@
+{
+  "记录类型": "T03 指定真实数据 LR 实验；公开镜像字节与队友官方原始文件一致",
+  "实验编号": "EXP-001",
+  "日期与时区": "2026-10-28T11:50:35.607190+08:00",
+  "执行者": "郭宇哲（morebadly）任务；Codex 协助编写、运行与核验，本人复现讲解待完成",
+  "研究问题与预期": "验证固定数据协议下，训练内预处理与简单 L2 LR 可以产生可复现的基线概率和评价",
+  "相对上一实验的改变": "本人第一次指定真实数据训练；此前 PREP 仅验证工程。用户授权搜索公开镜像后解决数据缺失。",
+  "数据版本": {
+    "来源与取得方式": {
+      "acquisition": "User authorized searching public mirrors; identical bytes verified against team T02 official-download SHA256.",
+      "official_origin": "https://www.kaggle.com/competitions/GiveMeSomeCredit/data",
+      "mirror_repository": "https://github.com/JLZml/Credit-Scoring-Data-Sets",
+      "mirror_ref": "dd454322df86d98ff97d6035357aa9a5c450c783",
+      "download_url": "https://raw.githubusercontent.com/JLZml/Credit-Scoring-Data-Sets/dd454322df86d98ff97d6035357aa9a5c450c783/3.%20Kaggle/Give%20Me%20Some%20Credit/cs-training.csv",
+      "downloaded_at": "2026-10-28T11:49:49.617839+08:00",
+      "bytes": 7564965,
+      "sha256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+      "rows": 150000,
+      "raw_columns": 12,
+      "matches_T02_official_download": true
+    },
+    "文件名与版本": "cs-training.csv，原字节保存在本地 data/raw/；未重新导出或归一化换行",
+    "文件SHA256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+    "行数与字段": {
+      "rows": 150000,
+      "raw_columns": 12,
+      "cleaned_columns": [
+        "RevolvingUtilizationOfUnsecuredLines",
+        "age",
+        "NumberOfTime30-59DaysPastDueNotWorse",
+        "DebtRatio",
+        "MonthlyIncome",
+        "NumberOfOpenCreditLinesAndLoans",
+        "NumberOfTimes90DaysLate",
+        "NumberRealEstateLoansOrLines",
+        "NumberOfTime60-89DaysPastDueNotWorse",
+        "NumberOfDependents",
+        "NumberOfTime30-59DaysPastDueNotWorse__special",
+        "NumberOfTimes90DaysLate__special",
+        "NumberOfTime60-89DaysPastDueNotWorse__special"
+      ]
+    },
+    "标签列及1的含义": "SeriousDlqin2yrs=1：两年内发生90天或以上严重逾期",
+    "目标窗口": "两年",
+    "是否已参与开发": "是：同伴 T01/T02 数据工作及本次 T03；不是新增独立测试数据",
+    "本次评价范围": "指定数据内部内容组隔离的训练/验证/测试分区；训练是表观效果，验证选择阈值，测试用于固定后的评价"
+  },
+  "处理方式": {
+    "缺失异常重复与序号处理": "复用 src/data.py：age=0设缺失，三个逾期次数96/98设缺失并保留special指示；不随意截断、不删行；标签和导出序号不入模",
+    "切分比例seed与组定义": {
+      "train": 0.7,
+      "validation": 0.15,
+      "test": 0.15,
+      "unit": "cleaned_feature_group",
+      "seed": 42,
+      "stratification": "group_max_y"
+    },
+    "分区行数与正类比例": {
+      "train": {
+        "rows": 104974,
+        "groups": 104547,
+        "positive": 7018,
+        "positive_rate": 0.0668546497227885
+      },
+      "validation": {
+        "rows": 22518,
+        "groups": 22403,
+        "positive": 1507,
+        "positive_rate": 0.06692423838706812
+      },
+      "test": {
+        "rows": 22508,
+        "groups": 22403,
+        "positive": 1501,
+        "positive_rate": 0.06668740003554292
+      }
+    },
+    "仅在训练集拟合的步骤": {
+      "fit_partition": "train",
+      "imputation": "median; all-missing training columns use zero",
+      "missing_indicators": [
+        "age",
+        "NumberOfTime30-59DaysPastDueNotWorse",
+        "MonthlyIncome",
+        "NumberOfTimes90DaysLate",
+        "NumberOfTime60-89DaysPastDueNotWorse",
+        "NumberOfDependents"
+      ],
+      "median_values": {
+        "RevolvingUtilizationOfUnsecuredLines": 0.1537571955,
+        "age": 52.0,
+        "NumberOfTime30-59DaysPastDueNotWorse": 0.0,
+        "DebtRatio": 0.36652449600000003,
+        "MonthlyIncome": 5385.5,
+        "NumberOfOpenCreditLinesAndLoans": 8.0,
+        "NumberOfTimes90DaysLate": 0.0,
+        "NumberRealEstateLoansOrLines": 1.0,
+        "NumberOfTime60-89DaysPastDueNotWorse": 0.0,
+        "NumberOfDependents": 0.0,
+        "NumberOfTime30-59DaysPastDueNotWorse__special": 0.0,
+        "NumberOfTimes90DaysLate__special": 0.0,
+        "NumberOfTime60-89DaysPastDueNotWorse__special": 0.0
+      },
+      "scaler_mean": [
+        5.715268133886677,
+        52.29652104330596,
+        0.24678491817021359,
+        349.41917794295284,
+        6414.913445234058,
+        8.458427801169814,
+        0.09086059405186046,
+        1.0183759788138016,
+        0.06434926743765122,
+        0.7358965077066703,
+        0.0017623411511421877,
+        0.0017623411511421877,
+        0.0017623411511421877,
+        9.526168384552365e-06,
+        0.0017623411511421877,
+        0.19745841827500143,
+        0.0017623411511421877,
+        0.0017623411511421877,
+        0.0265780097929011
+      ],
+      "transformed_columns": [
+        "RevolvingUtilizationOfUnsecuredLines",
+        "age",
+        "NumberOfTime30-59DaysPastDueNotWorse",
+        "DebtRatio",
+        "MonthlyIncome",
+        "NumberOfOpenCreditLinesAndLoans",
+        "NumberOfTimes90DaysLate",
+        "NumberRealEstateLoansOrLines",
+        "NumberOfTime60-89DaysPastDueNotWorse",
+        "NumberOfDependents",
+        "NumberOfTime30-59DaysPastDueNotWorse__special",
+        "NumberOfTimes90DaysLate__special",
+        "NumberOfTime60-89DaysPastDueNotWorse__special",
+        "missingindicator_age",
+        "missingindicator_NumberOfTime30-59DaysPastDueNotWorse",
+        "missingindicator_MonthlyIncome",
+        "missingindicator_NumberOfTimes90DaysLate",
+        "missingindicator_NumberOfTime60-89DaysPastDueNotWorse",
+        "missingindicator_NumberOfDependents"
+      ]
+    },
+    "验证测试转换方式": "使用已拟合的 SimpleImputer、StandardScaler 和 LR；不重新fit，不用验证/测试统计填补训练输入",
+    "分区成员证据位置": "artifacts/morebadly/EXP-001-20261028-T03/split_members.csv、split_positions.npz"
+  },
+  "模型参数": {
+    "模型名称": "simple_l2_lr",
+    "完整参数": {
+      "C": 1.0,
+      "class_weight": null,
+      "dual": false,
+      "fit_intercept": true,
+      "intercept_scaling": 1,
+      "l1_ratio": null,
+      "max_iter": 2000,
+      "multi_class": "deprecated",
+      "n_jobs": null,
+      "penalty": "l2",
+      "random_state": 42,
+      "solver": "lbfgs",
+      "tol": 0.0001,
+      "verbose": 0,
+      "warm_start": false
+    },
+    "WOE分箱与IV定义": null,
+    "评分尺度": null,
+    "早停指标及有效迭代": {
+      "early_stopping": null,
+      "converged_iterations": [
+        15
+      ]
+    },
+    "阈值与来源": {
+      "value": 0.0629705015937871,
+      "partition": "validation",
+      "rule": "finite [0,1], maximum TPR-FPR, ties choose largest; p>=threshold",
+      "test_used_for_selection": false
+    },
+    "配置固定时间": "2026-10-28T11:50:15.883618+08:00"
+  },
+  "评价指标": [
+    {
+      "model": "simple_l2_lr",
+      "partition": "train",
+      "rows": 104974,
+      "positive": 7018,
+      "auc": 0.814007626952184,
+      "ks": 0.4854590235353923,
+      "ap": 0.35341362771879115,
+      "pr_auc_trapezoidal": 0.3532391381654735,
+      "brier": 0.05246463742613729,
+      "log_loss": 0.19870846389795752,
+      "threshold": 0.0629705015937871,
+      "decision_rule": "probability >= threshold",
+      "tn": 79487,
+      "fp": 18469,
+      "fn": 2296,
+      "tp": 4722,
+      "precision": 0.20361347074296063,
+      "recall": 0.6728412653177543,
+      "f1": 0.3126220662716409
+    },
+    {
+      "model": "simple_l2_lr",
+      "partition": "validation",
+      "rows": 22518,
+      "positive": 1507,
+      "auc": 0.8166640964158914,
+      "ks": 0.49326814844703104,
+      "ap": 0.35305869698594705,
+      "pr_auc_trapezoidal": 0.35257934474144315,
+      "brier": 0.05303619226026845,
+      "log_loss": 0.19969469500880047,
+      "threshold": 0.0629705015937871,
+      "decision_rule": "probability >= threshold",
+      "tn": 17140,
+      "fp": 3871,
+      "fn": 486,
+      "tp": 1021,
+      "precision": 0.20870809484873262,
+      "recall": 0.6775049767750497,
+      "f1": 0.31911236130645415
+    },
+    {
+      "model": "simple_l2_lr",
+      "partition": "test",
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8235213591281888,
+      "ks": 0.5065242837901786,
+      "ap": 0.35295067473753206,
+      "pr_auc_trapezoidal": 0.3523911026796244,
+      "brier": 0.05259562828799135,
+      "log_loss": 0.19774280555439946,
+      "threshold": 0.0629705015937871,
+      "decision_rule": "probability >= threshold",
+      "tn": 17090,
+      "fp": 3917,
+      "fn": 484,
+      "tp": 1017,
+      "precision": 0.20612079448723145,
+      "recall": 0.6775483011325782,
+      "f1": 0.31608391608391606
+    }
+  ],
+  "结果与发现": {
+    "观察与证据": {
+      "run_audit": {
+        "all_rows_once": true,
+        "group_overlap": 0,
+        "seed_reproducible": true,
+        "saved_loaded_max_probability_difference": 0.0
+      },
+      "postrun_audit": {
+        "matches_T02_data_sha256": true,
+        "matches_T02_data_code_sha256": true,
+        "matches_T02_partition_summary": true,
+        "saved_artifact_hashes_verified": true,
+        "saved_probabilities_row_ids_and_labels_aligned": true,
+        "all_probabilities_valid": true,
+        "stored_group_fingerprints_do_not_cross_partitions": true,
+        "shared_code_unchanged_during_run": true,
+        "no_PR_or_remote_push": true
+      },
+      "training_converged_iterations": [
+        15
+      ]
+    },
+    "支持的判断": "简单 LR 基线在固定内部测试分区上 AUC=0.8235213591、KS=0.5065242838；可作为后续模型在相同样本上的比较基线",
+    "适用限制": "内部研究分区，不是时间外或客户外效果；本次没有测试集调参。Youden阈值用于研究演示。",
+    "图表预测评分及SHAP检查位置": "本地 predictions.csv 与 metrics.json；图表、评分卡和SHAP属于后续模块，未在T03声称完成"
+  },
+  "代码提交版本": {
+    "仓库": "https://github.com/ThreshoLdnnis/credit-risk-scoring-team",
+    "分支与提交SHA": {
+      "commit": "09aefd76465536e37f630d8034ad702c27334fd8",
+      "branch": "task/morebadly-T03-baseline",
+      "working_tree_changes": "?? experiments/morebadly/T03-20261028-status.json\n?? worklogs/morebadly/"
+    },
+    "未提交改动": "运行时仅个人 PREP 状态和日志尚未提交；业务文件哈希已核验。按用户要求不推送或提交PR。",
+    "Python与依赖版本": {
+      "python": "3.11.16",
+      "packages": {
+        "numpy": "1.26.4",
+        "pandas": "2.2.3",
+        "scipy": "1.14.1",
+        "scikit-learn": "1.5.2",
+        "joblib": "1.4.2"
+      }
+    },
+    "运行命令": [
+      "python",
+      "experiments/morebadly/run_t03.py",
+      "--input",
+      "D:\\社团实践\\credit-risk-scoring-team\\data\\raw\\cs-training.csv",
+      "--output",
+      "D:\\社团实践\\credit-risk-scoring-team\\artifacts\\morebadly\\EXP-001-20261028-T03",
+      "--config",
+      "D:\\社团实践\\credit-risk-scoring-team\\configs\\experiment.json"
+    ],
+    "输出目录与日志": "artifacts/morebadly/EXP-001-20261028-T03/；run.log、record.json、acquisition.json、postrun_audit.json",
+    "仓库性质": "本次团队新工程"
+  },
+  "存在的问题": [
+    "共享 run_pipeline.py 仍由负责人安排集成；本人提供独立已实测入口和调用示例",
+    "同伴审查、负责人确认、本人复现讲解和个人六项练习另行完成",
+    "按用户要求不提交PR、不推送远端；不能认定整个团队任务已合并关闭"
+  ],
+  "处理与复验结果": "从公开镜像取得与T02官方文件SHA256完全一致的数据；数据模块代码哈希、分区汇总一致。116项业务测试、环境检查、pip check、Ruff和语法编译通过；真实产物哈希、行序/标签、组隔离及保存加载概率均核验。",
+  "AI辅助与本人验证": "Codex辅助编写、独立代码审查、运行测试和真实实验；不把AI执行等同于本人掌握或团队同伴审查。",
+  "审查者日期与建议": null,
+  "下一步行动": "本人复现并讲解；负责人协调共享入口接入；用户允许提交后再进入PR与同伴审查流程。",
+  "代码文件SHA256": {
+    "src/data.py": "43aa72918d9d0b90e13b92f7d0dae993eb4471900d3c2c0ffd98be8780b9eb1d",
+    "src/baseline.py": "e65a047362f3af4c9063ffe9efc8b10feb99890e07c0e40cae087bd5ada5edb9",
+    "experiments/morebadly/run_t03.py": "ed6b0495b8bb6f9c243ddecabfbec75a06db9a93f4a55544f4be1050b723978b"
+  },
+  "配置文件SHA256": "c6eab1f1485445a375c9748ac869d6aba33c4d88260e8ac7c169828b120d3a97",
+  "本地产物SHA256": {
+    "baseline.joblib": "e3bd3ac658656d7df1bce1e5350a26450cc567f2e1f0e9786d9fd162ae96dba7",
+    "config.json": "cb6ddc4d5dac74ba75115c9c3339937e747c99e7df0dc31094e53060374cafcd",
+    "metrics.json": "a45b81c874caa0cb22d16fdda1a97c5030892042292e510eec7726ca982328f3",
+    "predictions.csv": "3259e0ea7fe7e60fbf76c18c1ea5bc4351d46937341fe00e3b76e74a1ca9744d",
+    "selection.json": "7a079cd87cad0a1513d5dbf8c38cfe3fb791cf2ae9ee280d888ff053426b0ed3",
+    "split_members.csv": "f6997c066dffa08127087bb21f2155f14fec5157a4c04f6c2749e8ab6cf30590",
+    "split_positions.npz": "df7ed83d06b2bb44ac8164f0098e0b1d537f9efeed4811bd90e71458573e9024",
+    "record.json": "21605d8167baafa76a13bcb20a745cdf6918fa4d0578401696e0b406174f7a59",
+    "acquisition.json": "b564ff756d5a0d924eb93ffeeba2b9d9acb77b6fba03b19ce4cd2ca7ffb818dd",
+    "postrun_audit.json": "a81d4129df333502465274bb5d8da1b23fb338c7c9babbdb8fa4e59e0a47650f",
+    "run.log": "c825d1f68370620ae87a17948fe0ee2b98a45a713afb6a2865d584bf15d3582f"
+  }
+}

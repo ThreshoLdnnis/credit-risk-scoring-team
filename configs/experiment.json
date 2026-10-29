@@ -1,5 +1,5 @@
 {
-  "status": "建议起始配置，团队尚未实现或运行业务模块",
+  "status": "简单 LR 与评分卡共用的固定研究配置；LightGBM、SHAP 与页面仍待后续实现",
   "seed": 42,
   "split": {
     "train": 0.7,

@@ -1,8 +1,12 @@
 """Focused tests for the train-only WOE/IV scorecard."""
 
+import warnings
+
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.exceptions import ConvergenceWarning
 
 from src.scorecard import (
     _transform_woe,
@@ -214,3 +218,71 @@ def test_fit_and_predict_reject_invalid_features(scorecard_data):
     bundle = fit_scorecard(x, y, settings)
     with pytest.raises(ValueError, match="字段与训练字段不一致"):
         predict_scorecard(bundle, x.drop(columns="signal").iloc[:2])
+
+
+def test_label_series_must_align_with_training_rows(scorecard_data):
+    x, y, settings = scorecard_data
+    labels = pd.Series(y, index=x.index)
+    with pytest.raises(ValueError, match="行顺序"):
+        fit_scorecard(x, labels.iloc[::-1], settings)
+    bundle = fit_scorecard(x, labels, settings)
+    assert bundle["status"] == "fitted"
+
+
+def test_complex_features_are_rejected_before_float_conversion(scorecard_data):
+    x, y, settings = scorecard_data
+    complex_input = x.copy()
+    complex_input["signal"] = complex_input["signal"].astype(complex) + 2j
+    with pytest.raises(TypeError, match="复数"):
+        fit_scorecard(complex_input, y, settings)
+    bundle = fit_scorecard(x, y, settings)
+    with pytest.raises(TypeError, match="复数"):
+        predict_scorecard(bundle, complex_input.iloc[:2])
+
+
+def test_save_load_and_inference_never_refits(scorecard_data, tmp_path, monkeypatch):
+    from optbinning import OptimalBinning
+    from sklearn.linear_model import LogisticRegression
+
+    x, y, settings = scorecard_data
+    bundle = fit_scorecard(x, y, settings)
+    path = tmp_path / "scorecard.joblib"
+    joblib.dump(bundle, path)
+    restored = joblib.load(path)
+    expected = predict_scorecard(bundle, x)
+
+    def fail_fit(*args, **kwargs):
+        pytest.fail("Inference attempted to refit bins or logistic regression")
+
+    monkeypatch.setattr(OptimalBinning, "fit", fail_fit)
+    monkeypatch.setattr(LogisticRegression, "fit", fail_fit)
+    pd.testing.assert_frame_equal(predict_scorecard(restored, x), expected, check_exact=True)
+    assert restored["selected_features"] == bundle["selected_features"]
+
+
+def test_lr_nonconvergence_cannot_be_reported_as_success(scorecard_data, monkeypatch):
+    from sklearn.linear_model import LogisticRegression
+
+    def nonconverged(*args, **kwargs):
+        warnings.warn("Convergence test", ConvergenceWarning)
+
+    monkeypatch.setattr(LogisticRegression, "fit", nonconverged)
+    with pytest.raises(RuntimeError, match="未收敛"):
+        fit_scorecard(*scorecard_data)
+
+
+def test_failed_binning_is_not_silently_accepted(scorecard_data, monkeypatch):
+    import optbinning
+
+    class FailedBinning:
+        status = "INFEASIBLE"
+
+        def __init__(self, **kwargs):
+            pass
+
+        def fit(self, *args):
+            return self
+
+    monkeypatch.setattr(optbinning, "OptimalBinning", FailedBinning)
+    with pytest.raises(RuntimeError, match="INFEASIBLE"):
+        fit_scorecard(*scorecard_data)
