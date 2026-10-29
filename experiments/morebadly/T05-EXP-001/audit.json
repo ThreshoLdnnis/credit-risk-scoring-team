@@ -1,0 +1,35 @@
+{
+  "verified_at": "2026-10-29T14:49:06.806102+08:00",
+  "verification_scope": "Post-run hash/row/group/history review; no model fitting, selection or test-based changes.",
+  "manifest_sha256": "3a11b03f24fa9813fea3cc9e77d9ed36867e037d90e66e2832e879d68ad42de6",
+  "all_manifest_output_hashes_match": true,
+  "current_source_and_config_hashes_match_run": true,
+  "dataset_hash_matches_T02": true,
+  "split_positions_equal_T03_EXP_002": true,
+  "baseline_probabilities_exactly_equal_T03_EXP_002": true,
+  "all_three_row_positions_labels_and_partitions_match_raw_and_split": true,
+  "group_fingerprints_do_not_cross_partitions": true,
+  "validation_history_argmax_equals_best_iteration": true,
+  "sklearn_and_lightgbm_validation_auc_max_absolute_difference": 1.1102230246251565e-16,
+  "test_confusion_matrix_counts_match_partition_size": true,
+  "unit_tests": {
+    "tests": 199,
+    "failures": 0,
+    "errors": 0,
+    "junit_sha256": "3000b50e45cfa5a5e4dd07e87a79606e8f8978014e7c89e6d9a8dadb4968d41f"
+  },
+  "runtime_audit": {
+    "all_rows_once": true,
+    "group_overlap": 0,
+    "seed_reproducible": true,
+    "all_models_use_identical_partitions": true,
+    "all_selections_frozen_before_test": true,
+    "saved_loaded_max_output_difference": {
+      "baseline": 0.0,
+      "scorecard": 0.0,
+      "tree": 0.0
+    }
+  },
+  "published_comparison_sha256": "52e23bf5e8150226f7ef329ea576dd8e8ccc4689dcbf8d907d492d9d3032152e",
+  "published_comparison_note": "CSV line endings normalized to LF by Git; run_manifest output hashes describe the original local run files. Numeric values unchanged."
+}
