@@ -1,0 +1,360 @@
+{
+  "记录类型": "Clement-xi T04 评分卡与 Baseline 真实数据本地复现",
+  "实验编号": "EXP-001",
+  "日期与时区": "2026-10-29 Asia/Shanghai",
+  "执行者": "杨曦（Clement-xi）；Codex 辅助执行本地复现和证据整理",
+  "研究问题与预期": "在同一份公开样本、清洗结果和固定分组切分上比较简单 LR 与 WOE/IV 评分卡；全部预处理和模型参数仅从训练分区拟合。",
+  "相对上一实验的改变": "在负责人合并的双模型共享入口上，首次由本人本机执行真实数据 Baseline 与评分卡联合复现。未调参或改共享配置。",
+  "数据版本": {
+    "来源与取得方式": "Kaggle Give Me Some Credit 有标签 cs-training.csv；使用本机已有文件，本次未下载或改写。",
+    "文件名与版本": "data/raw/cs-training.csv；SHA256 与 T02 已核验版本一致。",
+    "文件SHA256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+    "行数与字段": "150000 行、12 个原始字段；清洗后 13 个特征。",
+    "标签列及1的含义": "SeriousDlqin2yrs；1 表示两年内发生 90 天或以上严重逾期，0 表示未发生。",
+    "目标窗口": "两年。",
+    "是否已参与开发": "是；该公开数据此前用于 T02/T03 开发和流程验证。",
+    "本次评价范围": "同一固定分组切分的 train、validation、test 内部研究评价；不是独立时间外或客户外验证。"
+  },
+  "处理方式": {
+    "缺失异常重复与序号处理": "调用 main 上 src.data 的正式实现；排除导出序号和标签，age=0 置缺失，逾期次数 96/98 添加特殊值指示后置缺失；保留行。原始文件仅作只读输入，运行后 SHA256 仍与记录数据版本一致。",
+    "原始文件是否保持": "是；运行过程只读取 data/raw/cs-training.csv，运行后 SHA256 仍为 1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac。",
+    "切分比例seed与组定义": "70/15/15；seed=42；按清洗特征内容组划分，组最大标签用于分层。",
+    "分区行数与正类比例": {
+      "train": {
+        "rows": 104974,
+        "groups": 104547,
+        "positive": 7018,
+        "positive_rate": 0.0668546497227885
+      },
+      "validation": {
+        "rows": 22518,
+        "groups": 22403,
+        "positive": 1507,
+        "positive_rate": 0.06692423838706812
+      },
+      "test": {
+        "rows": 22508,
+        "groups": 22403,
+        "positive": 1501,
+        "positive_rate": 0.06668740003554292
+      }
+    },
+    "仅在训练集拟合的步骤": "Baseline：训练集拟合中位数填补、缺失指示、标准化和 L2 LR。Scorecard：训练集监督分箱、原生 WOE/IV、IV 筛选和 L2 LR。",
+    "验证测试转换方式": "两个模型的选择阈值各自在 validation 按有限 [0,1] 范围最大化 TPR-FPR 确定；两阈值固定并写入 selections.json 后才预测和评价 test。",
+    "分区成员证据位置": "artifacts\\Clement-xi\\EXP-001-20261029\\split_positions.npz；与本机 T02 split_positions.npz 的 train/validation/test 数组逐项相同；group_overlap=0、all_rows_once=true。"
+  },
+  "模型参数": {
+    "模型名称": "baseline 与 WOE/IV logistic scorecard",
+    "完整参数": {
+      "baseline": {
+        "C": 1.0,
+        "penalty": "l2",
+        "max_iter": 2000,
+        "seed": 42,
+        "solver": "lbfgs"
+      },
+      "scorecard": {
+        "backend": "optbinning",
+        "max_n_bins": 5,
+        "min_iv": 0.02,
+        "C": 1.0,
+        "base_score": 600.0,
+        "base_odds": 20.0,
+        "pdo": 20.0
+      },
+      "scorecard_logistic_regression": {
+        "C": 1.0,
+        "class_weight": null,
+        "dual": false,
+        "fit_intercept": true,
+        "intercept_scaling": 1,
+        "l1_ratio": null,
+        "max_iter": 2000,
+        "multi_class": "deprecated",
+        "n_jobs": null,
+        "penalty": "l2",
+        "random_state": 42,
+        "solver": "lbfgs",
+        "tol": 0.0001,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "scorecard_iterations": [
+        15
+      ]
+    },
+    "WOE分箱与IV定义": "OptBinning 原生数值分箱与原生 WOE/IV；13/13 个特征分箱状态 OPTIMAL；min_iv=0.02，10 个特征入模；3 个特殊值指示列 IV=0 未入模。",
+    "评分尺度": {
+      "base_score": 600.0,
+      "base_odds": 20.0,
+      "pdo": 20.0,
+      "factor": 28.85390081777927,
+      "offset": 513.5614381022527,
+      "formula": "score = offset - factor * logit(P(y=1))"
+    },
+    "早停指标及有效迭代": "不适用；Baseline 与评分卡均为逻辑回归。",
+    "阈值与来源": {
+      "baseline": {
+        "value": 0.06297050159378716,
+        "source": "validation",
+        "test_used_for_selection": false
+      },
+      "scorecard": {
+        "value": 0.07223157595142572,
+        "source": "validation",
+        "test_used_for_selection": false
+      }
+    },
+    "配置固定时间": {
+      "baseline": "2026-10-29T16:36:33.093268+08:00",
+      "scorecard": "2026-10-29T16:36:36.208005+08:00"
+    }
+  },
+  "评价指标": [
+    {
+      "model": "baseline",
+      "partition": "train",
+      "rows": 104974,
+      "positive": 7018,
+      "auc": 0.814007626952184,
+      "ks": 0.4854590235353923,
+      "ap": 0.35341362771879115,
+      "pr_auc_trapezoidal": 0.3532391381654735,
+      "brier": 0.05246463742613729,
+      "log_loss": 0.19870846389795752,
+      "threshold": 0.06297050159378716,
+      "tn": 79487,
+      "fp": 18469,
+      "fn": 2296,
+      "tp": 4722,
+      "precision": 0.20361347074296063,
+      "recall": 0.6728412653177543,
+      "f1": 0.3126220662716409
+    },
+    {
+      "model": "baseline",
+      "partition": "validation",
+      "rows": 22518,
+      "positive": 1507,
+      "auc": 0.8166640964158914,
+      "ks": 0.49326814844703104,
+      "ap": 0.35305869698594705,
+      "pr_auc_trapezoidal": 0.35257934474144315,
+      "brier": 0.05303619226026847,
+      "log_loss": 0.19969469500880047,
+      "threshold": 0.06297050159378716,
+      "tn": 17140,
+      "fp": 3871,
+      "fn": 486,
+      "tp": 1021,
+      "precision": 0.20870809484873262,
+      "recall": 0.6775049767750497,
+      "f1": 0.31911236130645415
+    },
+    {
+      "model": "baseline",
+      "partition": "test",
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8235213591281888,
+      "ks": 0.5065242837901786,
+      "ap": 0.35295067473753206,
+      "pr_auc_trapezoidal": 0.3523911026796244,
+      "brier": 0.05259562828799135,
+      "log_loss": 0.19774280555439946,
+      "threshold": 0.06297050159378716,
+      "tn": 17090,
+      "fp": 3917,
+      "fn": 484,
+      "tp": 1017,
+      "precision": 0.20612079448723145,
+      "recall": 0.6775483011325782,
+      "f1": 0.31608391608391606
+    },
+    {
+      "model": "scorecard",
+      "partition": "train",
+      "rows": 104974,
+      "positive": 7018,
+      "auc": 0.8500318540026247,
+      "ks": 0.5473996438179576,
+      "ap": 0.3586586819386115,
+      "pr_auc_trapezoidal": 0.3585978990713707,
+      "brier": 0.05109656458006028,
+      "log_loss": 0.18574867938775377,
+      "threshold": 0.07223157595142572,
+      "tn": 78903,
+      "fp": 19053,
+      "fn": 1847,
+      "tp": 5171,
+      "precision": 0.21346598414795245,
+      "recall": 0.7368196067255628,
+      "f1": 0.33102874335829974
+    },
+    {
+      "model": "scorecard",
+      "partition": "validation",
+      "rows": 22518,
+      "positive": 1507,
+      "auc": 0.8432591017748878,
+      "ks": 0.5348780714194104,
+      "ap": 0.34805483124026804,
+      "pr_auc_trapezoidal": 0.3477199420411121,
+      "brier": 0.05158603660310316,
+      "log_loss": 0.18818578986378623,
+      "threshold": 0.07223157595142572,
+      "tn": 16871,
+      "fp": 4140,
+      "fn": 404,
+      "tp": 1103,
+      "precision": 0.210375739080679,
+      "recall": 0.7319177173191772,
+      "f1": 0.32681481481481484
+    },
+    {
+      "model": "scorecard",
+      "partition": "test",
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8555283926010895,
+      "ks": 0.5457907863395175,
+      "ap": 0.3721504694544947,
+      "pr_auc_trapezoidal": 0.3719303507681221,
+      "brier": 0.05038456798693506,
+      "log_loss": 0.18341643765711885,
+      "threshold": 0.07223157595142572,
+      "tn": 16897,
+      "fp": 4110,
+      "fn": 396,
+      "tp": 1105,
+      "precision": 0.21188878235858102,
+      "recall": 0.7361758827448368,
+      "f1": 0.329064919594997
+    }
+  ],
+  "结果与发现": {
+    "观察与证据": "测试分区 Baseline AUC=0.8235213591、KS=0.5065242838、AP=0.3529506747、Brier=0.0525956283；Scorecard AUC=0.8555283926、KS=0.5457907863、AP=0.3721504695、Brier=0.0503845680。本次 scorecard 测试 AUC 高于 baseline，但只描述该固定内部测试分区。",
+    "支持的判断": "共享双模型入口、同一分区、训练内拟合、验证阈值冻结、保存重载预测和信用分分项加和在本机运行通过。模型和评分卡证据均来自本次真实执行。",
+    "适用限制": "公开数据的内部随机分组分区；不是独立盲测、时间外或客户外验证，不能证明审批策略或实际业务效果。",
+    "图表预测评分及SHAP检查位置": "本地产物目录内 scorecard_predictions.csv、baseline_predictions.csv、model_comparison.csv、scorecard_binning.json；逐行预测与模型未纳入本记录。SHAP 本次未运行，也未生成 SHAP 产物。",
+    "样本对齐缺失或异常检查": "共享入口检查预测索引与输入特征行序一致；测试覆盖标签索引对齐、复数特征拒绝、预测行重排拒绝及 LR 不收敛报错。真实运行审计 all_rows_once=true、group_overlap=0、test_used_for_selection=false；保存重载最大输出差为 0，评分分项加和最大误差为 0。"
+  },
+  "代码提交版本": {
+    "仓库": "ThreshoLdnnis/credit-risk-scoring-team",
+    "分支与提交SHA": "main 757ba3e75da1d42cdf98528ae762e191401da22c",
+    "未提交改动": "",
+    "Python与依赖版本": {
+      "python": "3.11.9",
+      "packages": {
+        "numpy": "1.26.4",
+        "pandas": "2.2.3",
+        "scipy": "1.14.1",
+        "scikit-learn": "1.5.2",
+        "joblib": "1.4.2",
+        "optbinning": "0.20.1"
+      }
+    },
+    "运行命令": "PowerShell: $env:OPENBLAS_NUM_THREADS='1'; & .\\.venv\\Scripts\\python.exe run_pipeline.py --input data/raw/cs-training.csv --output artifacts/Clement-xi/EXP-001-20261029 --models baseline scorecard",
+    "输出目录与日志": "D:\\Projects\\credit-risk-scoring-team\\artifacts\\Clement-xi\\EXP-001-20261029; run.log、record.json；详见本地 output_sha256 清单。",
+    "仓库性质": "本次团队新工程；不是负责人个人实操项目。"
+  },
+  "本次测试与输出": {
+    "测试": {
+      "command": ".venv\\Scripts\\python.exe -m pytest -q tests -p no:cacheprovider",
+      "final_result": "146 passed; 14 Matplotlib/Pyparsing deprecation warnings",
+      "environment": "OPENBLAS_NUM_THREADS=1 for the final run",
+      "note": "The first full-suite attempt had 145 passed and one CLI subprocess failure (OpenBLAS memory allocation); the isolated test passed with OPENBLAS_NUM_THREADS=1, then the full suite passed under the same process-scoped setting.",
+      "pip_check": "No broken requirements found.",
+      "ruff": ".venv\\Scripts\\ruff.exe check . --select E,F,I --ignore E501: All checks passed.",
+      "diff_check": "git diff --check: passed before this record was created."
+    },
+    "训练及评估耗时秒": 21.0,
+    "输出文件": [
+      {
+        "name": "baseline_predictions.csv",
+        "bytes": 17042316
+      },
+      {
+        "name": "baseline.joblib",
+        "bytes": 3878
+      },
+      {
+        "name": "config.json",
+        "bytes": 843
+      },
+      {
+        "name": "metrics.json",
+        "bytes": 1632
+      },
+      {
+        "name": "model_comparison.csv",
+        "bytes": 1878
+      },
+      {
+        "name": "model_metrics.json",
+        "bytes": 3526
+      },
+      {
+        "name": "predictions.csv",
+        "bytes": 17042316
+      },
+      {
+        "name": "record.json",
+        "bytes": 24181
+      },
+      {
+        "name": "run.log",
+        "bytes": 340
+      },
+      {
+        "name": "scorecard_binning.json",
+        "bytes": 29851
+      },
+      {
+        "name": "scorecard_predictions.csv",
+        "bytes": 52558323
+      },
+      {
+        "name": "scorecard.joblib",
+        "bytes": 33585
+      },
+      {
+        "name": "selection.json",
+        "bytes": 308
+      },
+      {
+        "name": "selections.json",
+        "bytes": 776
+      },
+      {
+        "name": "split_members.csv",
+        "bytes": 13706044
+      },
+      {
+        "name": "split_positions.npz",
+        "bytes": 229960
+      }
+    ],
+    "模型重载预测最大差": {
+      "baseline": 0.0,
+      "scorecard": 0.0
+    },
+    "评分分项加和最大绝对误差": 0.0,
+    "评分卡概率范围": {
+      "minimum": 0.006010110385573749,
+      "maximum": 0.8551376478134372
+    },
+    "评分范围": {
+      "minimum": 462.3319589647915,
+      "maximum": 660.9553556740368
+    }
+  },
+  "存在的问题": [
+    "首次未限制 OpenBLAS 线程的完整测试中，1 个 CLI 子进程报告内存分配失败；设置仅作用于测试/实验命令的 OPENBLAS_NUM_THREADS=1 后，目标测试及完整测试均通过。",
+    "测试有 14 条 Matplotlib/Pyparsing 弃用警告。"
+  ],
+  "处理与复验结果": "未修改项目代码或全局配置；单项重跑 1 passed，之后全套 146 passed。Ruff 使用仓库 CI 命令通过，pip check 无依赖问题，git diff --check 在生成本记录前通过。",
+  "AI辅助与本人验证": "Codex 执行同步、检查、测试、真实数据运行和记录整理；指标来自本次本地 record.json/model_metrics.json 与逐行产物复核。请负责人/本人复核记录后再提交；本次未提交或推送。",
+  "审查者日期与建议": "待团队同伴审查。",
+  "下一步行动": "本人检查本地实验产物和记录，向团队讲解分箱、IV 筛选、坏事件概率到评分的方向及本次验证边界。T04 源码已通过 PR #12 合并到 main；本次个人实验记录尚未提交。"
+}
