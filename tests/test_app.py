@@ -63,6 +63,9 @@ class FakeStreamlit:
     def bar_chart(self, data, **kwargs):
         self.charts.append((data.copy(), kwargs))
 
+    def altair_chart(self, chart, **kwargs):
+        self.charts.append((chart.to_dict(), kwargs))
+
     def progress(self, value, **_kwargs):
         self.progress_values.append(value)
 
@@ -313,10 +316,13 @@ def test_prediction_failure_is_reported_without_result(tmp_path, monkeypatch):
 def test_explanation_mapping_is_displayed_when_interface_is_available():
     ui = FakeStreamlit()
     expected = {
-        "base_log_odds": -1.0,
+        "base_log_odds": [-1.0],
         "shap_values": [[0.2, -0.1]],
-        "raw_log_odds": -0.9,
+        "raw_log_odds": [-0.9],
         "probability": [0.2890504974],
+        "feature_names": ["x", "z"],
+        "row_index_repr": ["0"],
+        "metadata": {"model_output": "raw", "positive_class": 1},
     }
 
     app.render_explanation_panel(
@@ -452,16 +458,14 @@ def test_invalid_tree_probabilities_show_error_without_customer_results(tmp_path
     assert not ui.progress_values
 
 
-def test_tree_prediction_works_while_shap_remains_pending(tmp_path, monkeypatch, fitted_tree_case):
+def test_tree_prediction_and_real_shap_use_the_same_probability(tmp_path, fitted_tree_case):
     import joblib
 
-    import src.explanation
     from src.tree_model import predict_tree
 
     raw, _features, bundle = fitted_tree_case
     run_dir = _run_dir(tmp_path, models=("tree",))
     joblib.dump(bundle, run_dir / "tree.joblib")
-    monkeypatch.setattr(src.explanation, "explain_tree", lambda *_args: pytest.fail("SHAP must remain pending"))
     values = raw.iloc[0].to_dict()
     values["MonthlyIncome"] = ""
     values["NumberOfTimes90DaysLate"] = "98"
@@ -473,9 +477,9 @@ def test_tree_prediction_works_while_shap_remains_pending(tmp_path, monkeypatch,
 
     assert ui.metrics == [("两年内严重逾期概率（y=1）", f"{expected:.2%}")]
     assert ui.progress_values == [expected]
-    assert any("SHAP 解释待郭宇哲" in text for text in ui.infos)
+    assert any("基础值" in text for text in ui.captions)
     assert not any("没有 LightGBM" in text or "当前 Baseline" in text for text in ui.infos)
-    assert not ui.json_values
+    assert ui.json_values[0]['probability'] == [expected]
     assert not ui.errors
 
 
@@ -509,4 +513,22 @@ def test_actual_streamlit_tree_form_uses_saved_model(tmp_path, fitted_tree_case)
     assert not at.error
     assert len(at.metric) == 1
     assert at.metric[0].value == f"{expected:.2%}"
-    assert any("SHAP 解释待郭宇哲" in message.value for message in at.info)
+    assert any("基础值" in message.value for message in at.caption)
+
+
+def test_failed_shap_does_not_remove_a_valid_tree_prediction(tmp_path, monkeypatch, fitted_tree_case):
+    import joblib
+
+    import src.explanation
+
+    raw, _features, bundle = fitted_tree_case
+    run_dir = _run_dir(tmp_path, models=("tree",))
+    joblib.dump(bundle, run_dir / 'tree.joblib')
+    monkeypatch.setattr(src.explanation, 'explain_tree', lambda *_args: (_ for _ in ()).throw(RuntimeError('test explanation failure')))
+    ui = FakeStreamlit(inputs=_input_values(raw.iloc[0]), submit=True)
+
+    app.render_page(ui, tmp_path)
+
+    assert len(ui.metrics) == 1
+    assert any('解释计算失败' in message for message in ui.errors)
+    assert not ui.json_values

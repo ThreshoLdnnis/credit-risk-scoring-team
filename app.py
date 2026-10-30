@@ -6,6 +6,7 @@ fit models, alter thresholds, or make credit approval decisions.
 
 from __future__ import annotations
 
+import argparse
 import html
 import json
 import math
@@ -287,6 +288,7 @@ def render_explanation_panel(
     *,
     available: bool = False,
     explainer=None,
+    expected_probability=None,
 ) -> None:
     """Render the declared tree explainer when an actual tree bundle exists."""
     st.subheader("模型解释（SHAP）")
@@ -296,7 +298,7 @@ def render_explanation_panel(
         )
         return
     if not available:
-        st.info("LightGBM 概率预测已接入。SHAP 解释待郭宇哲完成解释模块并联调后接入。")
+        st.info("填写客户信息并成功运行 LightGBM 评估后，这里会显示该客户的 SHAP 解释。")
         return
 
     if explainer is None:
@@ -309,6 +311,9 @@ def render_explanation_panel(
 
     try:
         explanation = explainer(bundle, features)
+        from src.ui_explanations import validate_explanation
+
+        explanation = validate_explanation(explanation, features, expected_probability)
     except NotImplementedError:
         st.info("解释模块尚未完成，当前没有可展示的 SHAP 结果。")
         return
@@ -318,7 +323,52 @@ def render_explanation_panel(
     if not isinstance(explanation, Mapping):
         st.error("解释接口返回格式无效；预期为包含 log-odds 与 SHAP 信息的映射。")
         return
-    st.json(dict(explanation))
+    try:
+        import altair as alt
+        import pandas as pd
+
+        from src.ui_explanations import local_contributions
+
+        rows = local_contributions(explanation, FEATURE_LABELS)
+        chart = alt.Chart(pd.DataFrame(rows)).mark_bar().encode(
+            x=alt.X('起点:Q', title='原始 log-odds', scale=alt.Scale(zero=False)), x2='终点:Q',
+            y=alt.Y('因素:N', sort=[row['因素'] for row in rows], title=None, axis=alt.Axis(labelLimit=220)),
+            color=alt.Color('方向:N', scale=alt.Scale(
+                domain=['增加严重逾期倾向', '降低严重逾期倾向'], range=['#c0392b', '#2874a6']),
+                legend=alt.Legend(orient='bottom', columns=1)),
+            tooltip=['因素:N', alt.Tooltip('贡献:Q', format='.6f'), '方向:N'],
+        ).properties(height=320)
+        st.altair_chart(chart, use_container_width=True)
+        base, raw = explanation['base_log_odds'][0], explanation['raw_log_odds'][0]
+        st.caption(f"基础值 {base:.6f} + 全部贡献 {raw - base:+.6f} = 模型输出 {raw:.6f}。"
+                   "红色贡献增加、蓝色贡献降低模型的严重逾期倾向；单位是 log-odds，不是概率百分点或因果效应。")
+        st.dataframe(pd.DataFrame(rows)[['因素', '贡献']], use_container_width=True)
+        with st.expander("解释设置与数值核验"):
+            st.json(dict(explanation))
+    except Exception as error:
+        st.error(f"解释图展示失败：{error}")
+
+
+def _render_global_explanation(st, run_dir: Path) -> None:
+    st.subheader("全局 SHAP：模型主要参考哪些因素")
+    try:
+        from src.ui_explanations import feature_label, load_global_explanation
+
+        result = load_global_explanation(run_dir)
+        if result is None:
+            st.info("该实验尚无批量解释产物。完成完整运行流程后，这里会自动展示全局重要性。")
+            return
+        summary, table = result['summary'], result['importance'].copy()
+        table['因素'] = [feature_label(name, FEATURE_LABELS) for name in table['feature']]
+        display = table.rename(columns={'mean_abs_shap_log_odds': '平均绝对贡献（log-odds）'})
+        st.bar_chart(display.set_index('因素')[['平均绝对贡献（log-odds）']], horizontal=True,
+                     height=380, x_label='平均绝对贡献（log-odds）')
+        st.caption(f"当前实验的 {summary['sample']['partition']} 分区固定样本，共 {summary['sample']['size']:,} 条。"
+                   "柱长表示贡献大小，不表示方向、因果关系或业务收益。")
+        if summary.get('models_with_reloaded_differences'):
+            st.caption("模型复验记录了重载后的数值差异；历史评价指标保持原样，详情见实验复验记录。")
+    except Exception as error:
+        st.warning(f"全局解释不可用：{error}。单笔模型预测仍可使用。")
 
 
 def _render_metrics(st, run_dir: Path) -> None:
@@ -437,6 +487,8 @@ def render_page(st, artifacts_root: str | Path | None = None) -> None:
     with provenance_container:
         _render_provenance(st, selected_run)
     _render_metrics(st, selected_run)
+    if selected_model == "tree":
+        _render_global_explanation(st, selected_run)
 
     st.divider()
     st.markdown('<div class="cr-section-kicker">Customer Assessment</div>', unsafe_allow_html=True)
@@ -531,8 +583,8 @@ def render_page(st, artifacts_root: str | Path | None = None) -> None:
             selected_model,
             bundle=bundle,
             features=features,
-            # SHAP 页面接入待解释模块完成并联调；本次仅接入 LightGBM 推理。
-            available=False,
+            available=selected_model == "tree" and result is not None and error_message is None,
+            expected_probability=None if result is None else result['probability'].to_numpy(),
         )
 
 
@@ -544,7 +596,10 @@ def main() -> None:
         print(f"无法启动 Streamlit 页面：{error}。请使用项目环境安装 requirements.txt。")
         return
     try:
-        render_page(st)
+        parser = argparse.ArgumentParser(description='本地信贷模型研究页面')
+        parser.add_argument('--artifacts-root', type=Path, default=Path(__file__).resolve().parent / 'artifacts')
+        args = parser.parse_args()
+        render_page(st, args.artifacts_root)
     except ImportError as error:
         st.error(f"页面依赖不可用：{error}")
 

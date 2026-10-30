@@ -1,80 +1,70 @@
 # 金融进修第一期：信贷评分卡开发
 
-团队从零完成数据管线、逻辑回归评分卡、LightGBM、SHAP 和 Streamlit。**数据、简单 LR、WOE/IV 评分卡、LightGBM 与统一评价已实现；共享入口支持同一分区比较三套模型。SHAP 与页面继续按后续任务推进。**
+输入客户信息，得到模型预测的严重逾期概率；评分卡给出信用分，SHAP 说明 LightGBM 的预测依据。本项目用于团队研究与教学演示。
 
-这是本次团队项目的正式仓库，日常只从 **main** 进入。临时任务分支用于提 PR，合并后清理。
-
-## 团队分工
-
-| 成员 | GitHub 账号 | 主责 | 对应模块 |
-| --- | --- | --- | --- |
-| 吴晓亦 | [Sally-yi](https://github.com/Sally-yi) | 数据 | 数据读取与校验、清洗、训练集探索、分组切分与分区证据 |
-| 杨曦 | [Clement-xi](https://github.com/Clement-xi) | 评分卡与界面 | WOE/IV、逻辑回归评分卡、信用评分、Streamlit 页面 |
-| 郭宇哲 | [morebadly](https://github.com/morebadly) | 模型、评价和解释 | 简单 LR、LightGBM、统一评价、验证选择、SHAP 解释 |
-
-项目负责人（ThreshoLdnnis）统筹接口、共享配置、集成与合并。三位成员分别补充本人模块的测试、实验记录和说明；六项个人练习由每人独立完成。
-
-## 成员先做三件事
-
-1. 用本人的 GitHub 账号接受仓库邀请，克隆本仓库，按[首次上手](docs/首次上手.md)完成环境与首次读数。
-2. 到[任务分工](docs/任务认领.md)查看本人主责和对应 Issue，确认修改路径后再动手；函数接口按[接口约定](docs/接口约定.md)。
-3. 按[协作约定](CONTRIBUTING.md)在任务分支提交，通过 PR 审查后合入 main。个人练习、日志和实验分别放在本人用户名目录下。
+**三模型、单笔/全局 SHAP、Streamlit 页面和完整运行入口已接通。** 全新 Python 3.11 环境完成真实数据流程，279 项业务测试通过。成员现场讲解与最终认可仍由本人完成。
 
 ```mermaid
 flowchart LR
-    A[认领任务与文件] --> B[从最新 main 建任务分支]
-    B --> C[实现与本地验证]
-    C --> D[提交 PR]
-    D --> E[同伴审查与自动检查]
-    E --> F[负责人合入 main]
+    A[固定版本原始数据] --> B[清洗与分组切分]
+    B --> C[简单逻辑回归]
+    B --> D[WOE评分卡]
+    B --> E[LightGBM]
+    C --> F[统一评价]
+    D --> F
+    E --> F
+    E --> G[SHAP全局与单笔解释]
+    F --> H[Streamlit展示]
+    G --> H
 ```
 
-## 常用入口
+## 先看哪里
 
-| 想做什么 | 打开哪里 |
+| 你想做什么 | 入口 |
 | --- | --- |
-| 查看一周安排、分工和验收 | [任务认领](docs/任务认领.md) |
-| 写业务代码 | `src/`；主责按模块认领，接口见 [约定](docs/接口约定.md) |
-| 完成六项个人练习 | [learning/README.md](learning/README.md) |
-| 记录个人进展 | [worklogs/README.md](worklogs/README.md) |
-| 记录本人的真实实验 | [experiments/README.md](experiments/README.md) |
-| 阅读六项练习详细要求 | [学员任务书](docs/学员任务书.md) |
+| 跑起来、复现、演示 | [运行与验收](docs/运行与验收.md) |
+| 看方法、真实结果与限制 | [项目报告](reports/final/项目报告.md) |
+| 看数据字段与接口 | [接口约定](docs/接口约定.md) |
+| 看三人分工 | [任务认领](docs/任务认领.md) |
+| 完成个人练习 | [六项练习](learning/README.md) |
 
-## 运行模型
+## 跑一次，再打开页面
 
-取得指定的 `data/raw/cs-training.csv` 并安装团队依赖后，在仓库根目录运行：
+按[首次上手](docs/首次上手.md)建立 Python 3.11 环境，取得指定的 `data/raw/cs-training.csv` 后运行：
 
 ```powershell
-.venv\Scripts\python.exe run_pipeline.py --models baseline scorecard tree
+.venv\Scripts\python.exe run_project.py --output artifacts/team/run-001
+.venv\Scripts\python.exe -m streamlit run app.py --server.address 127.0.0.1 --server.port 8503
 ```
 
-默认生成新的本地 `artifacts/team/` 实验目录。三套模型复用一次清洗和分组切分，只用训练集拟合；LightGBM 用验证集 AUC 选择最佳轮数，各模型用验证集确定阈值。全部模型与阈值固定后再评价测试集。
+第一条命令完成环境检查、三模型训练、独立数据审计、模型重载核对与批量解释。第二条命令打开页面，选择实验及模型，输入客户信息即可评估。输出目录必须是新目录。
 
-| 想运行什么 | 命令参数 |
+| 模型 | 页面显示什么 |
 | --- | --- |
-| 三模型比较 | `--models baseline scorecard tree` |
-| 简单 LR 与评分卡 | `--models baseline scorecard` |
-| 仅 LightGBM | `--models tree` |
-| 仅评分卡 | `--models scorecard` |
-| 仅简单 LR（原有默认行为） | `--models baseline`，或省略 `--models` |
+| 简单逻辑回归 | 严重逾期概率，作为简单对照 |
+| WOE/IV 评分卡 | 概率、信用分和变量分项；风险越高，分数越低 |
+| LightGBM | 概率、该客户的 SHAP 贡献和本实验全局重要性 |
 
-常用产物：`model_comparison.csv` 是按模型和分区排列的汇总比较表；`model_metrics.json` 保存全部选定模型的指标；`scorecard_binning.json` 保存原生分箱、IV 与评分尺度。`record.json` 另存树模型最佳轮数和验证 AUC 历史；`figures/validation/` 与 `figures/test/` 保存 ROC、PR、校准图及评分卡信用分分布。模型、分区成员、逐行概率、信用分和分项保存在本地，不上传仓库。
+## 本次真实研究结果
 
-可用 `--input`、`--config`、`--output` 指定路径；输出目录必须尚不存在。原有三参数 `run_experiment(data_path, output_dir, settings)` 继续默认运行简单 LR；同时运行三套时加 `models=('baseline', 'scorecard', 'tree')`。接口和文件说明见 [接口约定](docs/接口约定.md)，本次入口接入步骤与真实验证见 [LightGBM 共享入口接入](docs/共享入口接入.md)；此前双模型验收见 [T03–T04 联调验收](reports/T03-T04联调验收.md)。
+同一内部测试分区，共 22,508 行；标签 1 表示两年内发生 90 天或以上严重逾期。以下来自本次完整运行的固定模型与阈值。
 
-## 当前进度
+| 模型 | AUC ↑ | KS ↑ | AP ↑ | Brier ↓ |
+| --- | ---: | ---: | ---: | ---: |
+| 简单逻辑回归 | 0.823521 | 0.506524 | 0.352951 | 0.052596 |
+| WOE/IV 评分卡 | 0.855528 | 0.545791 | 0.372150 | 0.050385 |
+| LightGBM | 0.871837 | 0.577973 | 0.411703 | 0.048351 |
 
-| 内容 | 状态 |
-| --- | --- |
-| 工程目录、接口、协作说明和六项练习框架 | 已准备 |
-| 数据处理、探索与简单 LR 链路 | 已实现；T03 已用指定真实数据验证 |
-| WOE/IV 与评分卡 | 已实现；共享入口可输出概率、信用分和分项 |
-| LightGBM 与统一评价曲线 | 已实现；共享入口支持三模型及最佳轮数记录 |
-| SHAP 与页面 | 待 T06 完成 |
-| 模块测试、团队实验与最终报告 | 已有数据、模型及共享入口测试；实验见联调验收，最终报告待整合 |
+LightGBM 在本次内部研究比较中表现较好；结果不能直接推断未来客户或实际授信效果。SHAP 贡献的单位是 log-odds，不是概率百分点或因果效应。完整证据和数值差异说明见[项目报告](reports/final/项目报告.md)。
 
-CI 只检查仓库格式、语法和已经提交的练习或测试。绿色检查不代表待实现的系统已经完成。
+## 团队与协作
 
-## 数据与结果
+| 成员 | 账号 | 原有主责 |
+| --- | --- | --- |
+| 吴晓亦 | Sally-yi | 数据清洗、探索、分区与数据审计 |
+| 杨曦 | Clement-xi | WOE/IV、评分卡与界面 |
+| 郭宇哲 | morebadly | 简单模型、LightGBM、评价与解释 |
 
-真实数据按 [Kaggle Give Me Some Credit 官方页面](https://www.kaggle.com/competitions/GiveMeSomeCredit/data) 的规则自行取得，放在本地 `data/raw/`。不提交原始数据、训练模型、逐行预测、账号密钥或虚拟环境。个人原有实操、文章成绩和人工小例子均不计为团队真实实验。
+项目负责人 ThreshoLdnnis 统筹共享入口和报告；按用户要求由 Codex 协助完成最终联调、页面解释及技术验收。已运行的技术验证与成员本人理解、讲解分别记录。
+
+日常以 `main` 为正式入口，变更走任务分支与 PR。原始数据、模型和逐行产物留在本地，不提交 GitHub。数据按 [Kaggle 官方页面](https://www.kaggle.com/competitions/GiveMeSomeCredit/data) 的规则取得，项目不会在仓库分发原始文件。
