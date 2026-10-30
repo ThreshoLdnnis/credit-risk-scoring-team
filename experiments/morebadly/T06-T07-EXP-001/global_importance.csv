@@ -1,0 +1,14 @@
+feature,mean_abs_shap_log_odds
+RevolvingUtilizationOfUnsecuredLines,0.6969370685747664
+NumberOfTime30-59DaysPastDueNotWorse,0.29275024311354825
+age,0.21915434607210943
+NumberOfTimes90DaysLate,0.19003778831013682
+NumberOfOpenCreditLinesAndLoans,0.13268914919705727
+DebtRatio,0.11487914173492321
+MonthlyIncome,0.11201353788516111
+NumberOfTime60-89DaysPastDueNotWorse,0.097211684652381
+NumberRealEstateLoansOrLines,0.0815650666085079
+NumberOfDependents,0.020697453729906567
+NumberOfTime30-59DaysPastDueNotWorse__special,0.0
+NumberOfTimes90DaysLate__special,0.0
+NumberOfTime60-89DaysPastDueNotWorse__special,0.0

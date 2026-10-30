@@ -24,7 +24,8 @@ def test_complete_metric_schema_includes_string_decision_rule():
         workflow._assert_metrics(metrics, {**metrics, 'auc': .1})
 
 
-def test_synthetic_pipeline_to_explanation_and_tamper_refusal(tmp_path, monkeypatch):
+@pytest.mark.parametrize('models', [['baseline', 'tree'], ['baseline', 'scorecard', 'tree']], ids=['own_models', 'all_models'])
+def test_synthetic_pipeline_to_explanation_and_tamper_refusal(tmp_path, monkeypatch, models):
     rng = np.random.default_rng(62)
     raw = pd.DataFrame(rng.uniform(1, 9, (320, 10)), columns=FEATURE_COLUMNS)
     raw['age'] = rng.integers(20, 80, len(raw))
@@ -36,7 +37,7 @@ def test_synthetic_pipeline_to_explanation_and_tamper_refusal(tmp_path, monkeypa
     experiment = tmp_path / 'pipeline'
     config = json.loads((run_pipeline.ROOT / 'configs/experiment.json').read_text(encoding='utf-8'))
     config['tree'].update(n_estimators=12, early_stopping_rounds=3, min_child_samples=10)
-    run_pipeline.run_experiment(source, experiment, config, synthetic=True, models=['baseline', 'scorecard', 'tree'])
+    run_pipeline.run_experiment(source, experiment, config, synthetic=True, models=models)
     # Override specified-data gates only inside this engineered test fixture.
     record_path = experiment / 'record.json'
     record = json.loads(record_path.read_text(encoding='utf-8'))
@@ -46,6 +47,7 @@ def test_synthetic_pipeline_to_explanation_and_tamper_refusal(tmp_path, monkeypa
     output = tmp_path / 'explanations'
     summary = workflow.verify(experiment, source, output, sample_size=10)
     assert summary['sample']['size'] == 10
+    assert summary['selected_models'] == models
     assert summary['local_figure']['all_contributions_accounted_for']
     assert summary['single_row_and_reordered_columns_equal_batch']
     assert all(a['all_metrics_reproduce'] for a in summary['models'].values())

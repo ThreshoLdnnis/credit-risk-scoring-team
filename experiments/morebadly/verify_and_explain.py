@@ -1,7 +1,7 @@
 """T06/T07: audit a fixed shared experiment and explain a label-blind sample.
 
 Never fits, tunes, overwrites source artifacts or publishes row-level records.
-Run after run_pipeline.py --models baseline scorecard tree in a fresh directory.
+Run after run_pipeline.py --models baseline [scorecard] tree in a fresh directory.
 """
 
 import argparse
@@ -129,8 +129,11 @@ def verify(experiment, input_path, output, sample_size=1000, reference=None):
     record_path = experiment / 'record.json'
     record_hash = sha256(record_path)
     record = json.loads(record_path.read_text(encoding='utf-8'))
-    if record.get('status') != 'completed_official_data_experiment' or record.get('selected_models') != ['baseline', 'scorecard', 'tree']:
-        raise ValueError('Require a completed, specified-data, three-model shared experiment')
+    chosen_models = record.get('selected_models')
+    if record.get('status') != 'completed_official_data_experiment' or chosen_models not in [
+        ['baseline', 'tree'], ['baseline', 'scorecard', 'tree'],
+    ]:
+        raise ValueError('Require completed specified-data baseline/tree, with optional scorecard')
     if sha256(input_path) != EXPECTED_SOURCE or record['source']['sha256'] != EXPECTED_SOURCE:
         raise ValueError('Specified dataset SHA256 failed')
     source_hashes = {name: sha256(ROOT / name) for name in [
@@ -159,6 +162,8 @@ def verify(experiment, input_path, output, sample_size=1000, reference=None):
         partitions[pos] = part
     model_audits, bundles = {}, {}
     for name, predictor in [('baseline', predict_baseline), ('scorecard', predict_scorecard), ('tree', predict_tree)]:
+        if name not in chosen_models:
+            continue
         bundle = joblib.load(experiment / (name + '.joblib'))
         bundles[name] = bundle
         frame = pd.read_csv(experiment / (name + '_predictions.csv'), float_precision='round_trip')
@@ -203,7 +208,8 @@ def verify(experiment, input_path, output, sample_size=1000, reference=None):
         'status': 'completed_fixed_model_explanation_and_reproduction_audit',
         'created_at': datetime.now(timezone(timedelta(hours=8))).isoformat(),
         'source_sha256': EXPECTED_SOURCE, 'pipeline_record_sha256': record_hash,
-        'code_sha256': source_hashes, 'models': model_audits,
+        'code_sha256': source_hashes, 'models': model_audits, 'selected_models': chosen_models,
+        'unselected_models': [name for name in ['baseline', 'scorecard', 'tree'] if name not in chosen_models],
         'split': record['split'], 'partition_positions_reproduce': True, 'group_overlap': 0,
         'sample': {'partition': 'test', 'size': len(sample), 'population': len(positions['test']), 'seed': 42,
                    'method': 'uniform without replacement, sorted by original row position; no label or probability selection',
