@@ -310,8 +310,12 @@
     "owned-unit-tests.xml": "7bbdb0e85703ff6fce639dce9c621d8f71634d9f54eb0a187494ff4781690bbf",
     "packages.json": "00c38f6b1d8d01805463f768bb56738305dd7c32d3c9e1cdcf517b36507509f8",
     "pip-check.log": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf",
-    "reproduction-own.json": "d315a7ae87e8915414de8085ee774ae2a5d72b246e751759eddb43f134b61a7e",
     "source_snapshot.json": "30e5e074883b206e121b0589f68130d4e6aae38134b97d7fe341fe22d2c55783",
     "source_snapshot_full_failed.json": "76d67884427541510fa9afa3de9a07e92bc800553101e1a810709aead9549819"
+  },
+  "manifest_metadata_repair": {
+    "at": "2026-10-31T00:17:30.226407+08:00",
+    "reason": "Exclude self-referential hash of the success manifest; source, environment, models, metrics and SHAP results unchanged.",
+    "previous_manifest_sha256": "3cbbdcdad8450a4598c3719f52fe38979f28f954986b6effd8a623e9da7458dc"
   }
 }
