@@ -1,0 +1,207 @@
+{
+  "status": "completed_team_technical_delivery",
+  "started_at": "2026-10-31T01:11:08.839895+08:00",
+  "completed_at": "2026-10-31T01:11:44.961929+08:00",
+  "source_sha256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+  "code_sha256": {
+    "run_project.py": "894f1bd5d1cac2c8223ec3ce9359b7b685e9f111497d6e66828513b873ea1540",
+    "run_pipeline.py": "37bf6c076f6c5f39c1e5b39eeb0347b55f2405b5465e69ad501e05dcccf00a20",
+    "app.py": "f3cd4e5941e3608544ecdfecb618019b60b3d9db8537d7969991cdf31fe91c9c",
+    "check_environment.py": "c6b11f74cf958b514956955699bbe32ed8c57928297983e244cfc8e3c12b7adc",
+    "configs/experiment.json": "8836083a53c5f6623b37f8f9095d44d07a91ad9f39ef47c017c510e478361ce4",
+    "requirements.txt": "47ebd42ee4ec98e8f92a1843a60ceb51c27947ee7d6c2eb33bcd5834d48c3271",
+    "constraints.txt": "c13374116d627dac91b40c1d9876c782aa6f0f64184891e6639f817b25f55aa2",
+    "experiments/Sally-yi/check_data_reproduction.py": "4ba88dd010ff34df950c1756bccb627c81cdae6c0f5db676c89092a61d093737",
+    "experiments/morebadly/verify_and_explain.py": "f27fad7bdde0c38a1a8fc3ac2bc1b77640d06887d84dcb2ac77c841ee852178e",
+    "src/__init__.py": "5b392fff48738f17ed925b3f8006293bdd43169055514e468d03a773300b0638",
+    "src/baseline.py": "e65a047362f3af4c9063ffe9efc8b10feb99890e07c0e40cae087bd5ada5edb9",
+    "src/data.py": "43aa72918d9d0b90e13b92f7d0dae993eb4471900d3c2c0ffd98be8780b9eb1d",
+    "src/eda.py": "e2f5fdb6397c1a22ceaf61e205ebe28866f0a55b03985c91b5c896be4628bf56",
+    "src/evaluation.py": "a70ad48445414f40633b72327913b79db444934e427b8c41a02948c993aa4040",
+    "src/explanation.py": "56e89926c5193132129d9ce7efb861ec085f0f4e1b274b9b895f98b5b9bef804",
+    "src/scorecard.py": "2a6aee6ec876abb8356b6800a1ccc42834a1bac1871eea4738d9de3def69d5e1",
+    "src/tree_model.py": "2a12a1a1b52811fe68b4a8852001b6844b45afef0750b882c6db7d39ab85f226",
+    "src/ui_explanations.py": "07a38c995937c09c9d992c02f1bcba54bfc3894a6646ff7dbb70237ae97780df"
+  },
+  "selected_models": [
+    "baseline",
+    "scorecard",
+    "tree"
+  ],
+  "split": {
+    "train": {
+      "rows": 104974,
+      "groups": 104547,
+      "positive": 7018,
+      "positive_rate": 0.0668546497227885
+    },
+    "validation": {
+      "rows": 22518,
+      "groups": 22403,
+      "positive": 1507,
+      "positive_rate": 0.06692423838706812
+    },
+    "test": {
+      "rows": 22508,
+      "groups": 22403,
+      "positive": 1501,
+      "positive_rate": 0.06668740003554292
+    }
+  },
+  "test_metrics": {
+    "baseline": {
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8235213591281888,
+      "ks": 0.5065242837901786,
+      "ap": 0.35295067473753206,
+      "pr_auc_trapezoidal": 0.3523911026796244,
+      "brier": 0.05259562828799135,
+      "log_loss": 0.19774280555439946,
+      "threshold": 0.06297050159378716,
+      "decision_rule": "probability >= threshold",
+      "tn": 17090,
+      "fp": 3917,
+      "fn": 484,
+      "tp": 1017,
+      "precision": 0.20612079448723145,
+      "recall": 0.6775483011325782,
+      "f1": 0.31608391608391606
+    },
+    "scorecard": {
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8555283926010895,
+      "ks": 0.5457907863395175,
+      "ap": 0.3721504694544947,
+      "pr_auc_trapezoidal": 0.37193035076812203,
+      "brier": 0.05038456798693506,
+      "log_loss": 0.18341643765711885,
+      "threshold": 0.07223157595142603,
+      "decision_rule": "probability >= threshold",
+      "tn": 16897,
+      "fp": 4110,
+      "fn": 396,
+      "tp": 1105,
+      "precision": 0.21188878235858102,
+      "recall": 0.7361758827448368,
+      "f1": 0.329064919594997
+    },
+    "tree": {
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8718373022894212,
+      "ks": 0.5779727559485184,
+      "ap": 0.4117025434941642,
+      "pr_auc_trapezoidal": 0.411211310902879,
+      "brier": 0.04835055139872825,
+      "log_loss": 0.1747503847831937,
+      "threshold": 0.06673319462105777,
+      "decision_rule": "probability >= threshold",
+      "tn": 16716,
+      "fp": 4291,
+      "fn": 336,
+      "tp": 1165,
+      "precision": 0.21352639296187684,
+      "recall": 0.776149233844104,
+      "f1": 0.3349144746298692
+    }
+  },
+  "data_audit_status": "passed",
+  "model_reproduction_status": "completed_audit_with_reloaded_numeric_differences",
+  "models_with_reloaded_differences": [
+    "scorecard"
+  ],
+  "explanation": {
+    "explainer": "shap.TreeExplainer",
+    "shap_version": "0.46.0",
+    "lightgbm_version": "4.5.0",
+    "model_output": "raw",
+    "positive_class": 1,
+    "feature_perturbation": "tree_path_dependent",
+    "approximate": false,
+    "background_source": "training path/leaf sample counts stored in the fitted LightGBM trees",
+    "background_partition": "train",
+    "background_training_rows": 104974,
+    "explicit_background_rows": 0,
+    "best_iteration": 257,
+    "sample_selection": "all supplied rows in input order; caller records partition and selection",
+    "max_additivity_error": 1.4876988529977098e-14,
+    "additivity_atol": 1e-06,
+    "max_probability_error": 1.1102230246251565e-16,
+    "probability_atol": 1e-10,
+    "units": "log-odds contributions; not probability percentage points or causal effects"
+  },
+  "explanation_sample": {
+    "partition": "test",
+    "size": 1000,
+    "population": 22508,
+    "seed": 42,
+    "method": "uniform without replacement, sorted by original row position; no label or probability selection",
+    "positions_sha256": "6beb61a5eeae640380b13c6650c8800903dca08303b5beebbbd53937de0ba626"
+  },
+  "human_acceptance": "成员现场讲解、小改和最终认可需由本人实际完成",
+  "limitations": [
+    "公开数据的内部研究分区；不代表时间外、客户外或实际业务效果。",
+    "模型重载数值差异详见解释复验记录；不改写历史评价或冻结阈值。"
+  ],
+  "base_main_commit": "42856788ca9b5730ac93c06b5c2528815e3b992b",
+  "business_tests": {
+    "tests": "279",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  "page_acceptance": {
+    "actual_saved_model_cases": [
+      {
+        "model": "baseline",
+        "input_case": "original",
+        "probability_display_matches": true
+      },
+      {
+        "model": "baseline",
+        "input_case": "missing_special",
+        "probability_display_matches": true
+      },
+      {
+        "model": "scorecard",
+        "input_case": "original",
+        "probability_display_matches": true,
+        "credit_score_display_matches": true
+      },
+      {
+        "model": "scorecard",
+        "input_case": "missing_special",
+        "probability_display_matches": true,
+        "credit_score_display_matches": true
+      },
+      {
+        "model": "tree",
+        "input_case": "original",
+        "probability_display_matches": true,
+        "global_artifact_association": true,
+        "local_explanation_visible": true
+      },
+      {
+        "model": "tree",
+        "input_case": "missing_special",
+        "probability_display_matches": true,
+        "global_artifact_association": true,
+        "local_explanation_visible": true
+      }
+    ],
+    "invalid_input_rejected": true,
+    "shap_uses_actual_model": true,
+    "raw_or_row_data_uploaded": false
+  },
+  "installed_constraint_differences": {},
+  "fresh_environment": {
+    "python": "3.11.16",
+    "enable_user_site": false,
+    "installed_runtime_packages": 76
+  },
+  "original_artifact_checksums": {
+    "delivery.json": "3059e01e8ca2a8932e278ecffb8328e77b7a6e82aecd49f5f5cbdb351ba211c5"
+  }
+}
