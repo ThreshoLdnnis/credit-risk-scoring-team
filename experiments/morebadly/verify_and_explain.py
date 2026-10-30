@@ -75,6 +75,63 @@ def _assert_metrics(calculated, expected):
             raise RuntimeError('Metric definition differs: ' + key)
 
 
+def _metric_differences(calculated, expected):
+    """Report reloaded numeric metrics; saved experiment checks remain strict."""
+    if set(calculated) != set(expected):
+        raise RuntimeError('Metric schema differs from the saved experiment')
+    differences = {}
+    for key, value in calculated.items():
+        if isinstance(value, (int, float, np.number)):
+            if not np.isfinite(value) or not np.isfinite(expected[key]):
+                raise RuntimeError('Nonfinite metric: ' + key)
+            if not np.isclose(value, expected[key], rtol=0, atol=1e-12):
+                differences[key] = {'saved': expected[key], 'reloaded': value,
+                                    'absolute_difference': float(abs(value - expected[key]))}
+        elif value != expected[key]:
+            raise RuntimeError('Metric definition differs: ' + key)
+    return differences
+
+
+def _audit_probability_reproduction(y, saved_probability, reloaded_probability,
+                                    positions, expected_metrics, threshold):
+    """Keep saved results authoritative; diagnose tie-sensitive reload metrics.
+
+    Reject invalid or changed predictions using the original 1e-14 tolerance.
+    Recompute historical metrics and the selected threshold from the saved CSV.
+    Compute reload diagnostics with the frozen threshold, never retune or refit.
+    """
+    saved, reloaded = [np.asarray(p, dtype=float) for p in (saved_probability, reloaded_probability)]
+    for vector in (saved, reloaded):
+        if (vector.shape != (len(y),) or not np.isfinite(vector).all()
+                or ((vector < 0) | (vector > 1)).any()):
+            raise ValueError('Saved and reloaded probabilities must be aligned finite [0,1] vectors')
+    np.testing.assert_allclose(reloaded, saved, rtol=0, atol=1e-14)
+    validation = positions['validation']
+    np.testing.assert_allclose(select_threshold(y.iloc[validation], saved[validation]),
+                               threshold, rtol=0, atol=1e-14)
+    reloaded_threshold = select_threshold(y.iloc[validation], reloaded[validation])
+    threshold_matches = bool(np.isclose(reloaded_threshold, threshold, rtol=0, atol=1e-14))
+    metrics, differences = {}, {}
+    for part, pos in positions.items():
+        _assert_metrics(evaluate_binary(y.iloc[pos], saved[pos], threshold), expected_metrics[part])
+        metrics[part] = evaluate_binary(y.iloc[pos], reloaded[pos], threshold)
+        changed = _metric_differences(metrics[part], expected_metrics[part])
+        if changed:
+            differences[part] = changed
+    return {
+        'saved_model_predictions_reproduce': True, 'probability_atol': 1e-14,
+        'max_probability_difference': float(np.max(np.abs(reloaded - saved))),
+        'changed_probability_rows': int(np.count_nonzero(reloaded != saved)),
+        'saved_probability_metrics_reproduce': True,
+        'validation_threshold_reproduces_without_changes': True,
+        'reloaded_validation_threshold': float(reloaded_threshold),
+        'reloaded_validation_threshold_matches_saved': threshold_matches,
+        'reloaded_metrics': metrics, 'reloaded_metric_differences': differences,
+        'metric_comparison_atol': 1e-12,
+        'all_metrics_reproduce': not bool(differences),
+    }
+
+
 def save_figures(result, output):
     names = result['feature_names']
     values = np.asarray(result['shap_values'])
@@ -178,15 +235,12 @@ def verify(experiment, input_path, output, sample_size=1000, reference=None):
             probability = predicted.probability.to_numpy()
         else:
             probability = predicted
-        np.testing.assert_allclose(probability, frame.probability, rtol=0, atol=1e-14)
         selected = record['models'][name]['threshold']
-        np.testing.assert_allclose(select_threshold(y.iloc[positions['validation']], probability[positions['validation']]),
-                                   selected, rtol=0, atol=1e-14)
-        for part, pos in positions.items():
-            calculated = evaluate_binary(y.iloc[pos], probability[pos], selected)
-            _assert_metrics(calculated, record['models'][name]['metrics'][part])
-        model_audits[name] = {'rows_labels_partition_aligned': True, 'saved_model_predictions_reproduce': True,
-                              'validation_threshold_reproduces_without_changes': True, 'all_metrics_reproduce': True}
+        model_audits[name] = {
+            'rows_labels_partition_aligned': True,
+            **_audit_probability_reproduction(y, frame.probability, probability, positions,
+                                               record['models'][name]['metrics'], selected),
+        }
         if reference:
             prior = pd.read_csv(Path(reference) / (name + '_predictions.csv'), float_precision='round_trip')
             if not np.array_equal(prior.row_position, frame.row_position) or not np.array_equal(prior.partition, frame.partition):
@@ -204,12 +258,24 @@ def verify(experiment, input_path, output, sample_size=1000, reference=None):
         sha256(ROOT / name) != digest for name, digest in source_hashes.items()
     ) or any(sha256(experiment / name) != digest for name, digest in record['output_sha256'].items()):
         raise RuntimeError('Source data, code or original experiment changed during verification')
+    changed_models = [name for name, audit in model_audits.items()
+                      if not audit['all_metrics_reproduce'] or not audit['reloaded_validation_threshold_matches_saved']]
     summary = {
-        'status': 'completed_fixed_model_explanation_and_reproduction_audit',
+        'status': ('completed_audit_with_reloaded_numeric_differences' if changed_models
+                   else 'completed_fixed_model_explanation_and_reproduction_audit'),
         'created_at': datetime.now(timezone(timedelta(hours=8))).isoformat(),
         'source_sha256': EXPECTED_SOURCE, 'pipeline_record_sha256': record_hash,
         'code_sha256': source_hashes, 'models': model_audits, 'selected_models': chosen_models,
         'unselected_models': [name for name in ['baseline', 'scorecard', 'tree'] if name not in chosen_models],
+        'models_with_reloaded_differences': changed_models,
+        'reproduction_policy': {
+            'saved_csv_metrics_atol': 1e-12, 'reloaded_probability_atol': 1e-14,
+            'validation_threshold_atol': 1e-14,
+            'saved_results': 'Saved CSV probabilities must reproduce the original metrics and validation threshold.',
+            'reloaded_results': 'Use the frozen threshold; report all reloaded metrics and differences above 1e-12.',
+            'all_metrics_reproduce': 'True only when reloaded metrics also match original metrics within 1e-12.',
+            'numeric_differences': 'Small probability changes can alter ties and rank metrics; never overwrite original results.',
+        },
         'split': record['split'], 'partition_positions_reproduce': True, 'group_overlap': 0,
         'sample': {'partition': 'test', 'size': len(sample), 'population': len(positions['test']), 'seed': 42,
                    'method': 'uniform without replacement, sorted by original row position; no label or probability selection',

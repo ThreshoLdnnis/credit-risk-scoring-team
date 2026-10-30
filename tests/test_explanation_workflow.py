@@ -51,6 +51,9 @@ def test_synthetic_pipeline_to_explanation_and_tamper_refusal(tmp_path, monkeypa
     assert summary['local_figure']['all_contributions_accounted_for']
     assert summary['single_row_and_reordered_columns_equal_batch']
     assert all(a['all_metrics_reproduce'] for a in summary['models'].values())
+    assert all(a['saved_probability_metrics_reproduce'] for a in summary['models'].values())
+    assert summary['models_with_reloaded_differences'] == []
+    assert summary['reproduction_policy']['reloaded_probability_atol'] == 1e-14
     assert summary['explanation']['max_additivity_error'] < 1e-6
     for name, digest in summary['output_sha256'].items():
         assert workflow.sha256(output / name) == digest
@@ -63,3 +66,86 @@ def test_synthetic_pipeline_to_explanation_and_tamper_refusal(tmp_path, monkeypa
     with pytest.raises(ValueError, match='artifact hash'):
         workflow.verify(experiment, source, tmp_path / 'tampered', sample_size=10)
     assert not (tmp_path / 'tampered').exists()
+
+
+def _tied_probability_case():
+    labels = pd.Series(np.tile([0, 0, 1, 1], 3))
+    saved = np.tile([0.1, 0.5, 0.5, 0.9], 3)
+    positions = {part: np.arange(start, start + 4)
+                 for part, start in [('train', 0), ('validation', 4), ('test', 8)]}
+    threshold = .9
+    expected = {part: evaluate_binary(labels.iloc[pos], saved[pos], threshold)
+                for part, pos in positions.items()}
+    return labels, saved, positions, expected, threshold
+
+
+def test_exact_saved_and_reloaded_probabilities_keep_successful_metric_checks():
+    labels, saved, positions, expected, threshold = _tied_probability_case()
+
+    result = workflow._audit_probability_reproduction(labels, saved, saved.copy(), positions, expected, threshold)
+
+    assert result['saved_probability_metrics_reproduce']
+    assert result['all_metrics_reproduce']
+    assert result['reloaded_metric_differences'] == {}
+    assert result['changed_probability_rows'] == 0
+    assert result['reloaded_validation_threshold_matches_saved']
+
+
+def test_near_ties_report_rank_metric_and_threshold_differences_without_retuning():
+    labels, saved, positions, expected, threshold = _tied_probability_case()
+    reloaded = saved.copy()
+    reloaded[[2, 6, 10]] = np.nextafter(0.5, np.inf)
+    original_metrics = json.dumps(expected, sort_keys=True)
+
+    result = workflow._audit_probability_reproduction(labels, saved, reloaded, positions, expected, threshold)
+
+    assert result['saved_probability_metrics_reproduce']
+    assert result['validation_threshold_reproduces_without_changes']
+    assert result['max_probability_difference'] < 1e-14
+    assert result['changed_probability_rows'] == 3
+    assert not result['all_metrics_reproduce']
+    assert result['reloaded_metric_differences']['validation']['auc']['absolute_difference'] > 0
+    assert not result['reloaded_validation_threshold_matches_saved']
+    assert result['reloaded_validation_threshold'] != threshold
+    assert result['reloaded_metrics']['validation']['threshold'] == threshold
+    assert json.dumps(expected, sort_keys=True) == original_metrics
+    json.dumps(result, allow_nan=False)
+
+
+def test_reloaded_probability_drift_above_existing_tolerance_is_rejected():
+    labels, saved, positions, expected, threshold = _tied_probability_case()
+    reloaded = saved.copy()
+    reloaded[0] += 1e-6
+
+    with pytest.raises(AssertionError):
+        workflow._audit_probability_reproduction(labels, saved, reloaded, positions, expected, threshold)
+
+
+def test_saved_probabilities_must_still_reproduce_historical_metrics():
+    labels, saved, positions, expected, threshold = _tied_probability_case()
+    expected['train']['auc'] = .1
+
+    with pytest.raises(AssertionError):
+        workflow._audit_probability_reproduction(labels, saved, saved.copy(), positions, expected, threshold)
+
+
+def test_saved_validation_threshold_must_still_reproduce():
+    labels, saved, positions, expected, _threshold = _tied_probability_case()
+
+    with pytest.raises(AssertionError):
+        workflow._audit_probability_reproduction(labels, saved, saved.copy(), positions, expected, .8)
+
+
+@pytest.mark.parametrize('problem', ['nan', 'infinity', 'negative', 'above_one', 'length', 'matrix'])
+def test_invalid_reloaded_probability_vector_is_rejected(problem):
+    labels, saved, positions, expected, threshold = _tied_probability_case()
+    reloaded = saved.copy()
+    if problem == 'length':
+        reloaded = reloaded[:-1]
+    elif problem == 'matrix':
+        reloaded = reloaded.reshape(-1, 1)
+    else:
+        reloaded[0] = {'nan': np.nan, 'infinity': np.inf, 'negative': -.1, 'above_one': 1.1}[problem]
+
+    with pytest.raises(ValueError, match='finite'):
+        workflow._audit_probability_reproduction(labels, saved, reloaded, positions, expected, threshold)
