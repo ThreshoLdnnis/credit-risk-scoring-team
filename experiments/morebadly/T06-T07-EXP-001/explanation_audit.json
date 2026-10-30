@@ -1,0 +1,186 @@
+{
+  "status": "completed_fixed_model_explanation_and_reproduction_audit",
+  "created_at": "2026-10-31T00:11:38.199680+08:00",
+  "source_sha256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+  "pipeline_record_sha256": "8852ab099ea920f1c50ae52af7d98bc0eab42742a1f92ddc25dc5c17fdd2f696",
+  "code_sha256": {
+    "src/data.py": "43aa72918d9d0b90e13b92f7d0dae993eb4471900d3c2c0ffd98be8780b9eb1d",
+    "src/baseline.py": "e65a047362f3af4c9063ffe9efc8b10feb99890e07c0e40cae087bd5ada5edb9",
+    "src/scorecard.py": "2a6aee6ec876abb8356b6800a1ccc42834a1bac1871eea4738d9de3def69d5e1",
+    "src/tree_model.py": "2a12a1a1b52811fe68b4a8852001b6844b45afef0750b882c6db7d39ab85f226",
+    "src/evaluation.py": "a70ad48445414f40633b72327913b79db444934e427b8c41a02948c993aa4040",
+    "src/explanation.py": "56e89926c5193132129d9ce7efb861ec085f0f4e1b274b9b895f98b5b9bef804",
+    "run_pipeline.py": "37bf6c076f6c5f39c1e5b39eeb0347b55f2405b5465e69ad501e05dcccf00a20",
+    "experiments/morebadly/verify_and_explain.py": "8fd2d04c4fa0cea0b81c019a4fee6949c0d89c4ee8937457b649c7b14a84cb4d"
+  },
+  "models": {
+    "baseline": {
+      "rows_labels_partition_aligned": true,
+      "saved_model_predictions_reproduce": true,
+      "validation_threshold_reproduces_without_changes": true,
+      "all_metrics_reproduce": true,
+      "reference_max_probability_difference": 0.0
+    },
+    "tree": {
+      "rows_labels_partition_aligned": true,
+      "saved_model_predictions_reproduce": true,
+      "validation_threshold_reproduces_without_changes": true,
+      "all_metrics_reproduce": true,
+      "reference_max_probability_difference": 0.0
+    }
+  },
+  "selected_models": [
+    "baseline",
+    "tree"
+  ],
+  "unselected_models": [
+    "scorecard"
+  ],
+  "split": {
+    "train": {
+      "rows": 104974,
+      "groups": 104547,
+      "positive": 7018,
+      "positive_rate": 0.0668546497227885
+    },
+    "validation": {
+      "rows": 22518,
+      "groups": 22403,
+      "positive": 1507,
+      "positive_rate": 0.06692423838706812
+    },
+    "test": {
+      "rows": 22508,
+      "groups": 22403,
+      "positive": 1501,
+      "positive_rate": 0.06668740003554292
+    }
+  },
+  "partition_positions_reproduce": true,
+  "group_overlap": 0,
+  "sample": {
+    "partition": "test",
+    "size": 1000,
+    "population": 22508,
+    "seed": 42,
+    "method": "uniform without replacement, sorted by original row position; no label or probability selection",
+    "positions_sha256": "6beb61a5eeae640380b13c6650c8800903dca08303b5beebbbd53937de0ba626"
+  },
+  "explanation": {
+    "explainer": "shap.TreeExplainer",
+    "shap_version": "0.46.0",
+    "lightgbm_version": "4.5.0",
+    "model_output": "raw",
+    "positive_class": 1,
+    "feature_perturbation": "tree_path_dependent",
+    "approximate": false,
+    "background_source": "training path/leaf sample counts stored in the fitted LightGBM trees",
+    "background_partition": "train",
+    "background_training_rows": 104974,
+    "explicit_background_rows": 0,
+    "best_iteration": 257,
+    "sample_selection": "all supplied rows in input order; caller records partition and selection",
+    "max_additivity_error": 1.4876988529977098e-14,
+    "additivity_atol": 1e-06,
+    "max_probability_error": 1.1102230246251565e-16,
+    "probability_atol": 1e-10,
+    "units": "log-odds contributions; not probability percentage points or causal effects"
+  },
+  "single_row_and_reordered_columns_equal_batch": true,
+  "local_figure": {
+    "displayed_features": 8,
+    "omitted_features": 5,
+    "all_contributions_accounted_for": true
+  },
+  "global_importance": [
+    {
+      "feature": "RevolvingUtilizationOfUnsecuredLines",
+      "mean_abs_shap_log_odds": 0.6969370685747664
+    },
+    {
+      "feature": "NumberOfTime30-59DaysPastDueNotWorse",
+      "mean_abs_shap_log_odds": 0.2927502431135482
+    },
+    {
+      "feature": "age",
+      "mean_abs_shap_log_odds": 0.2191543460721094
+    },
+    {
+      "feature": "NumberOfTimes90DaysLate",
+      "mean_abs_shap_log_odds": 0.1900377883101368
+    },
+    {
+      "feature": "NumberOfOpenCreditLinesAndLoans",
+      "mean_abs_shap_log_odds": 0.1326891491970572
+    },
+    {
+      "feature": "DebtRatio",
+      "mean_abs_shap_log_odds": 0.1148791417349232
+    },
+    {
+      "feature": "MonthlyIncome",
+      "mean_abs_shap_log_odds": 0.1120135378851611
+    },
+    {
+      "feature": "NumberOfTime60-89DaysPastDueNotWorse",
+      "mean_abs_shap_log_odds": 0.097211684652381
+    },
+    {
+      "feature": "NumberRealEstateLoansOrLines",
+      "mean_abs_shap_log_odds": 0.0815650666085079
+    },
+    {
+      "feature": "NumberOfDependents",
+      "mean_abs_shap_log_odds": 0.0206974537299065
+    },
+    {
+      "feature": "NumberOfTime30-59DaysPastDueNotWorse__special",
+      "mean_abs_shap_log_odds": 0.0
+    },
+    {
+      "feature": "NumberOfTimes90DaysLate__special",
+      "mean_abs_shap_log_odds": 0.0
+    },
+    {
+      "feature": "NumberOfTime60-89DaysPastDueNotWorse__special",
+      "mean_abs_shap_log_odds": 0.0
+    }
+  ],
+  "environment": {
+    "python": "3.11.16",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "scipy": "1.14.1",
+      "scikit-learn": "1.5.2",
+      "lightgbm": "4.5.0",
+      "shap": "0.46.0",
+      "joblib": "1.4.2",
+      "matplotlib": "3.9.2"
+    }
+  },
+  "output_sha256": {
+    "global_importance.csv": "95132e7ee9ff5eb6f479c138929c04a9207731d5d2b7fc7400f77c7b7633c29c",
+    "global_shap.png": "dfe1a064b73ff8fe49a3ce02427f46b32c19363146c3c559cf42480fc32327c1",
+    "local_shap.png": "71297a9e167772c668771fc13f7c90715a7acbf7c242e2adddf89e8901a739ff",
+    "row_explanations.json": "f3b6e2c89e071fc9138fe9be1ee5fa1138acf9940ab096a43f760c8e45b576d2",
+    "sample_positions.npz": "22c616443c0818307f3b500a8e48c0bf97e928b0bfed42504ab3d7cfb9ad1a51"
+  },
+  "limitations": [
+    "SHAP describes this fixed model in log-odds, not causal effects.",
+    "Path-dependent training counts define the background; no explicit interventional background.",
+    "Aggregate importance describes only this 1000-row (or requested-size) internal test sample.",
+    "Public development data; no new independent or out-of-time validation.",
+    "Human presentation, teammate UI integration and final team acceptance remain separate."
+  ],
+  "publication_scope": "Aggregate SHAP audit and global importance only; local contributions, plots and prediction rows excluded.",
+  "fresh_environment_tests": {
+    "passed": 110,
+    "deselected_three_model_case": 1,
+    "junit_sha256": "7bbdb0e85703ff6fce639dce9c621d8f71634d9f54eb0a187494ff4781690bbf"
+  },
+  "published_comparison_sha256": "a8e25cb579bae831e800d3c9b036aee75390b26718c4baa57cc031e0f3e89d8b",
+  "comparison_line_endings": "Published copy normalized to LF; original local output hash remains in run_manifest.json.",
+  "published_run_manifest_sha256": "5213233b146385f6dc34980a63289be333715ecd1fbf039dcc78f8910271584d",
+  "published_run_manifest_note": "The pipeline_record_sha256 refers to the original local run JSON; the published JSON copy only normalizes CRLF to LF."
+}
