@@ -1,0 +1,957 @@
+{
+  "记录类型": "T07 新环境共享入口复现与数据验收",
+  "实验编号": "EXP-002",
+  "日期与时区": "2026-10-29 至 2026-10-30 Asia/Shanghai",
+  "执行者": "Sally-yi；Codex 协助执行与整理，本人讲解另行验收",
+  "研究问题与预期": "重建环境和数据，运行三模型共享入口，核对相同原始数据、固定规则及分区成员逐行对应。",
+  "相对上一实验的改变": "从 T02 个人数据脚本转到已合并的三模型共享入口；没有修改数据规则或模型配置。",
+  "数据版本": {
+    "来源与取得方式": "本人已下载的 Kaggle Give Me Some Credit 原 ZIP；本次提取原字节，未重新下载",
+    "文件名与版本": {
+      "cs-training.csv": {
+        "bytes": 7564965,
+        "sha256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac"
+      },
+      "cs-test.csv": {
+        "bytes": 4983329,
+        "sha256": "bab363a2a807218d32a51f5fc9668b8be7977795065edd386abc8546abaa5b78"
+      },
+      "Data Dictionary.xls": {
+        "bytes": 14848,
+        "sha256": "d388d6b11ed63fee95432048187c8c064b8ca38e40d7e8aab9edd36af240b092"
+      },
+      "sampleEntry.csv": {
+        "bytes": 1907226,
+        "sha256": "578b4b01d0f6ed7f97f1988afff0c41194e72bf4b25707119903d4de3dc1dcea"
+      }
+    },
+    "文件SHA256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+    "行数与字段": {
+      "rows": 150000,
+      "raw_columns": 12,
+      "input_columns": 13
+    },
+    "标签列及1的含义": "SeriousDlqin2yrs=1：两年内90天及以上严重逾期",
+    "目标窗口": "两年",
+    "是否已参与开发": "是；已有 T02、T03–T05 开发和验收。本次只复现固定配置。",
+    "本次评价范围": "三模型入口工程复现；本人的验收聚焦数据和成员对应。"
+  },
+  "处理方式": {
+    "缺失异常重复与序号处理": {
+      "age_zero": 1,
+      "special": {
+        "NumberOfTime30-59DaysPastDueNotWorse": 269,
+        "NumberOfTimes90DaysLate": 269,
+        "NumberOfTime60-89DaysPastDueNotWorse": 269
+      }
+    },
+    "切分比例seed与组定义": {
+      "train": 0.7,
+      "validation": 0.15,
+      "test": 0.15,
+      "unit": "cleaned_feature_group",
+      "seed": 42,
+      "stratification": "group_max_y"
+    },
+    "分区行数与正类比例": {
+      "train": {
+        "rows": 104974,
+        "groups": 104547,
+        "negative": 97956,
+        "positive": 7018,
+        "positive_rate": 0.0668546497227885,
+        "position_sha256": "4eac807048a6f79693a0e94086681bcf9155edf8ef5eff45bdb2a7176ab9c8ae",
+        "ordered_content_sha256": "caf1917ebe93ea6f4d191ef6e73d42e470f692a511ecb08f49231b4f8d799fed"
+      },
+      "validation": {
+        "rows": 22518,
+        "groups": 22403,
+        "negative": 21011,
+        "positive": 1507,
+        "positive_rate": 0.06692423838706812,
+        "position_sha256": "fbb7c06e97fe1f5b540a044bef0e2c3923cbacada1f90cff7252584849fee34e",
+        "ordered_content_sha256": "7a69aee3c5f8f2e11e72c6a3d201244bdaff73ae83247ee88c965a7962c00462"
+      },
+      "test": {
+        "rows": 22508,
+        "groups": 22403,
+        "negative": 21007,
+        "positive": 1501,
+        "positive_rate": 0.06668740003554292,
+        "position_sha256": "006d06c45a990dc22a0d4b876823ecba06f0fe21e70f7865c8e32951a1d238ad",
+        "ordered_content_sha256": "5e0653553278d5e1bd2a2f64abf2c0c5cba164df0677c5caa9ef0a3e41ffe17b"
+      }
+    },
+    "仅在训练集拟合的步骤": "LR 填补及标准化；评分卡监督分箱、WOE/IV和LR；树训练分箱。",
+    "验证测试转换方式": "复用训练对象；验证选择树轮数和阈值，固定后评价测试。",
+    "分区成员证据位置": "artifacts/Sally-yi/T07-20261029-locked/split_members.csv"
+  },
+  "模型参数": {
+    "模型名称": [
+      "baseline",
+      "scorecard",
+      "tree"
+    ],
+    "完整参数": {
+      "status": "简单 LR、评分卡与 LightGBM 共用的固定研究配置；SHAP 与页面待 T06 完成",
+      "seed": 42,
+      "split": {
+        "train": 0.7,
+        "validation": 0.15,
+        "test": 0.15,
+        "unit": "cleaned_feature_group"
+      },
+      "baseline": {
+        "C": 1.0,
+        "penalty": "l2",
+        "max_iter": 2000
+      },
+      "scorecard": {
+        "backend": "optbinning",
+        "max_n_bins": 5,
+        "min_iv": 0.02,
+        "C": 1.0,
+        "base_score": 600.0,
+        "base_odds": 20.0,
+        "pdo": 20.0
+      },
+      "tree": {
+        "n_estimators": 500,
+        "learning_rate": 0.04,
+        "num_leaves": 15,
+        "min_child_samples": 50,
+        "early_stopping_rounds": 30,
+        "metric": "auc"
+      },
+      "threshold": {
+        "selection_data": "validation",
+        "method": "max_tpr_minus_fpr",
+        "tie_break": "largest_finite_threshold_in_0_1"
+      }
+    },
+    "WOE分箱与IV定义": "已有 OptBinning 原生实现，未修改",
+    "评分尺度": {
+      "base_score": 600.0,
+      "base_odds": 20.0,
+      "pdo": 20.0,
+      "factor": 28.85390081777927,
+      "offset": 513.5614381022527,
+      "formula": "score = offset - factor * logit(P(y=1))"
+    },
+    "早停指标及有效迭代": {
+      "metric": "validation AUC",
+      "best_iteration": 257
+    },
+    "阈值与来源": {
+      "baseline": {
+        "threshold": 0.06297050159378716,
+        "source": "validation"
+      },
+      "scorecard": {
+        "threshold": 0.07223157595142599,
+        "source": "validation"
+      },
+      "tree": {
+        "threshold": 0.06673319462105777,
+        "source": "validation"
+      }
+    },
+    "配置固定时间": {
+      "baseline": "2026-10-30T10:17:28.591468+08:00",
+      "scorecard": "2026-10-30T10:17:32.605910+08:00",
+      "tree": "2026-10-30T10:17:38.202389+08:00"
+    }
+  },
+  "评价指标": [
+    {
+      "model": "baseline",
+      "partition": "train",
+      "rows": 104974,
+      "positive": 7018,
+      "auc": 0.814007626952184,
+      "ks": 0.4854590235353923,
+      "ap": 0.35341362771879115,
+      "pr_auc_trapezoidal": 0.3532391381654735,
+      "brier": 0.05246463742613729,
+      "log_loss": 0.19870846389795752,
+      "threshold": 0.06297050159378716,
+      "decision_rule": "probability >= threshold",
+      "tn": 79487,
+      "fp": 18469,
+      "fn": 2296,
+      "tp": 4722,
+      "precision": 0.20361347074296063,
+      "recall": 0.6728412653177543,
+      "f1": 0.3126220662716409
+    },
+    {
+      "model": "baseline",
+      "partition": "validation",
+      "rows": 22518,
+      "positive": 1507,
+      "auc": 0.8166640964158914,
+      "ks": 0.49326814844703104,
+      "ap": 0.35305869698594705,
+      "pr_auc_trapezoidal": 0.35257934474144315,
+      "brier": 0.053036192260268455,
+      "log_loss": 0.19969469500880047,
+      "threshold": 0.06297050159378716,
+      "decision_rule": "probability >= threshold",
+      "tn": 17140,
+      "fp": 3871,
+      "fn": 486,
+      "tp": 1021,
+      "precision": 0.20870809484873262,
+      "recall": 0.6775049767750497,
+      "f1": 0.31911236130645415
+    },
+    {
+      "model": "baseline",
+      "partition": "test",
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8235213591281888,
+      "ks": 0.5065242837901786,
+      "ap": 0.35295067473753206,
+      "pr_auc_trapezoidal": 0.3523911026796244,
+      "brier": 0.05259562828799135,
+      "log_loss": 0.19774280555439946,
+      "threshold": 0.06297050159378716,
+      "decision_rule": "probability >= threshold",
+      "tn": 17090,
+      "fp": 3917,
+      "fn": 484,
+      "tp": 1017,
+      "precision": 0.20612079448723145,
+      "recall": 0.6775483011325782,
+      "f1": 0.31608391608391606
+    },
+    {
+      "model": "scorecard",
+      "partition": "train",
+      "rows": 104974,
+      "positive": 7018,
+      "auc": 0.8500318532753045,
+      "ks": 0.5473996438179576,
+      "ap": 0.3586586819386115,
+      "pr_auc_trapezoidal": 0.35859789902565015,
+      "brier": 0.05109656458006028,
+      "log_loss": 0.18574867938775377,
+      "threshold": 0.07223157595142599,
+      "decision_rule": "probability >= threshold",
+      "tn": 78903,
+      "fp": 19053,
+      "fn": 1847,
+      "tp": 5171,
+      "precision": 0.21346598414795245,
+      "recall": 0.7368196067255628,
+      "f1": 0.33102874335829974
+    },
+    {
+      "model": "scorecard",
+      "partition": "validation",
+      "rows": 22518,
+      "positive": 1507,
+      "auc": 0.8432592754760462,
+      "ks": 0.5348780714194104,
+      "ap": 0.34805828610951844,
+      "pr_auc_trapezoidal": 0.3477224004119309,
+      "brier": 0.05158603660310316,
+      "log_loss": 0.18818578986378617,
+      "threshold": 0.07223157595142599,
+      "decision_rule": "probability >= threshold",
+      "tn": 16871,
+      "fp": 4140,
+      "fn": 404,
+      "tp": 1103,
+      "precision": 0.210375739080679,
+      "recall": 0.7319177173191772,
+      "f1": 0.32681481481481484
+    },
+    {
+      "model": "scorecard",
+      "partition": "test",
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8555284084582446,
+      "ks": 0.5457907863395175,
+      "ap": 0.37215047466337603,
+      "pr_auc_trapezoidal": 0.3719303533725627,
+      "brier": 0.05038456798693506,
+      "log_loss": 0.18341643765711885,
+      "threshold": 0.07223157595142599,
+      "decision_rule": "probability >= threshold",
+      "tn": 16897,
+      "fp": 4110,
+      "fn": 396,
+      "tp": 1105,
+      "precision": 0.21188878235858102,
+      "recall": 0.7361758827448368,
+      "f1": 0.329064919594997
+    },
+    {
+      "model": "tree",
+      "partition": "train",
+      "rows": 104974,
+      "positive": 7018,
+      "auc": 0.8801117308576706,
+      "ks": 0.6010394701962896,
+      "ap": 0.4491729490090246,
+      "pr_auc_trapezoidal": 0.4491204515814158,
+      "brier": 0.04714989041425583,
+      "log_loss": 0.17043470212995018,
+      "threshold": 0.06673319462105777,
+      "decision_rule": "probability >= threshold",
+      "tn": 77964,
+      "fp": 19992,
+      "fn": 1382,
+      "tp": 5636,
+      "precision": 0.21991571718432965,
+      "recall": 0.8030777999430037,
+      "f1": 0.3452796667279299
+    },
+    {
+      "model": "tree",
+      "partition": "validation",
+      "rows": 22518,
+      "positive": 1507,
+      "auc": 0.8623491117254378,
+      "ks": 0.5730914419428986,
+      "ap": 0.3964567924143133,
+      "pr_auc_trapezoidal": 0.396140415369936,
+      "brier": 0.04928483638481471,
+      "log_loss": 0.17880143425579567,
+      "threshold": 0.06673319462105777,
+      "decision_rule": "probability >= threshold",
+      "tn": 16684,
+      "fp": 4327,
+      "fn": 333,
+      "tp": 1174,
+      "precision": 0.21341574259225596,
+      "recall": 0.7790311877903119,
+      "f1": 0.3350456621004566
+    },
+    {
+      "model": "tree",
+      "partition": "test",
+      "rows": 22508,
+      "positive": 1501,
+      "auc": 0.8718373022894212,
+      "ks": 0.5779727559485184,
+      "ap": 0.4117025434941642,
+      "pr_auc_trapezoidal": 0.411211310902879,
+      "brier": 0.04835055139872825,
+      "log_loss": 0.1747503847831937,
+      "threshold": 0.06673319462105777,
+      "decision_rule": "probability >= threshold",
+      "tn": 16716,
+      "fp": 4291,
+      "fn": 336,
+      "tp": 1165,
+      "precision": 0.21352639296187684,
+      "recall": 0.776149233844104,
+      "f1": 0.3349144746298692
+    }
+  ],
+  "结果与发现": {
+    "观察与证据": {
+      "data_audit": {
+        "checked_at": "2026-10-30T10:18:26.084538+08:00",
+        "scope": "Actual shared-entry data audit; aggregates only",
+        "status": "passed",
+        "source_sha256": "1bd46da486a5708c58c7b01a034fae2a13b327f6f7b62ea7ba4fe3b5824b24ac",
+        "execution_commit": "f071c345efbfd1b722a7beaedf688014ca4afbad",
+        "rows": 150000,
+        "cleaned_columns": [
+          "RevolvingUtilizationOfUnsecuredLines",
+          "age",
+          "NumberOfTime30-59DaysPastDueNotWorse",
+          "DebtRatio",
+          "MonthlyIncome",
+          "NumberOfOpenCreditLinesAndLoans",
+          "NumberOfTimes90DaysLate",
+          "NumberRealEstateLoansOrLines",
+          "NumberOfTime60-89DaysPastDueNotWorse",
+          "NumberOfDependents",
+          "NumberOfTime30-59DaysPastDueNotWorse__special",
+          "NumberOfTimes90DaysLate__special",
+          "NumberOfTime60-89DaysPastDueNotWorse__special"
+        ],
+        "groups": 149353,
+        "extra_rows_in_duplicate_groups": 647,
+        "mixed_label_groups": 38,
+        "labels": {
+          "0": 139974,
+          "1": 10026
+        },
+        "missing_before": {
+          "RevolvingUtilizationOfUnsecuredLines": 0,
+          "age": 0,
+          "NumberOfTime30-59DaysPastDueNotWorse": 0,
+          "DebtRatio": 0,
+          "MonthlyIncome": 29731,
+          "NumberOfOpenCreditLinesAndLoans": 0,
+          "NumberOfTimes90DaysLate": 0,
+          "NumberRealEstateLoansOrLines": 0,
+          "NumberOfTime60-89DaysPastDueNotWorse": 0,
+          "NumberOfDependents": 3924
+        },
+        "missing_after": {
+          "RevolvingUtilizationOfUnsecuredLines": 0,
+          "age": 1,
+          "NumberOfTime30-59DaysPastDueNotWorse": 269,
+          "DebtRatio": 0,
+          "MonthlyIncome": 29731,
+          "NumberOfOpenCreditLinesAndLoans": 0,
+          "NumberOfTimes90DaysLate": 269,
+          "NumberRealEstateLoansOrLines": 0,
+          "NumberOfTime60-89DaysPastDueNotWorse": 269,
+          "NumberOfDependents": 3924,
+          "NumberOfTime30-59DaysPastDueNotWorse__special": 0,
+          "NumberOfTimes90DaysLate__special": 0,
+          "NumberOfTime60-89DaysPastDueNotWorse__special": 0
+        },
+        "training_missing": {
+          "RevolvingUtilizationOfUnsecuredLines": 0,
+          "age": 1,
+          "NumberOfTime30-59DaysPastDueNotWorse": 185,
+          "DebtRatio": 0,
+          "MonthlyIncome": 20728,
+          "NumberOfOpenCreditLinesAndLoans": 0,
+          "NumberOfTimes90DaysLate": 185,
+          "NumberRealEstateLoansOrLines": 0,
+          "NumberOfTime60-89DaysPastDueNotWorse": 185,
+          "NumberOfDependents": 2790,
+          "NumberOfTime30-59DaysPastDueNotWorse__special": 0,
+          "NumberOfTimes90DaysLate__special": 0,
+          "NumberOfTime60-89DaysPastDueNotWorse__special": 0
+        },
+        "rule_counts": {
+          "age_zero": 1,
+          "special": {
+            "NumberOfTime30-59DaysPastDueNotWorse": 269,
+            "NumberOfTimes90DaysLate": 269,
+            "NumberOfTime60-89DaysPastDueNotWorse": 269
+          }
+        },
+        "splits": {
+          "train": {
+            "rows": 104974,
+            "groups": 104547,
+            "negative": 97956,
+            "positive": 7018,
+            "positive_rate": 0.0668546497227885,
+            "position_sha256": "4eac807048a6f79693a0e94086681bcf9155edf8ef5eff45bdb2a7176ab9c8ae",
+            "ordered_content_sha256": "caf1917ebe93ea6f4d191ef6e73d42e470f692a511ecb08f49231b4f8d799fed"
+          },
+          "validation": {
+            "rows": 22518,
+            "groups": 22403,
+            "negative": 21011,
+            "positive": 1507,
+            "positive_rate": 0.06692423838706812,
+            "position_sha256": "fbb7c06e97fe1f5b540a044bef0e2c3923cbacada1f90cff7252584849fee34e",
+            "ordered_content_sha256": "7a69aee3c5f8f2e11e72c6a3d201244bdaff73ae83247ee88c965a7962c00462"
+          },
+          "test": {
+            "rows": 22508,
+            "groups": 22403,
+            "negative": 21007,
+            "positive": 1501,
+            "positive_rate": 0.06668740003554292,
+            "position_sha256": "006d06c45a990dc22a0d4b876823ecba06f0fe21e70f7865c8e32951a1d238ad",
+            "ordered_content_sha256": "5e0653553278d5e1bd2a2f64abf2c0c5cba164df0677c5caa9ef0a3e41ffe17b"
+          }
+        },
+        "group_overlap": {
+          "train/validation": 0,
+          "train/test": 0,
+          "validation/test": 0
+        },
+        "all_rows_once": true,
+        "seed_reproducible": true,
+        "independent_cleaning_equal": true,
+        "model_row_alignment": {
+          "baseline": {
+            "rows": 150000,
+            "row_id_group_partition_and_label_match": true
+          },
+          "scorecard": {
+            "rows": 150000,
+            "row_id_group_partition_and_label_match": true
+          },
+          "tree": {
+            "rows": 150000,
+            "row_id_group_partition_and_label_match": true
+          }
+        },
+        "baseline_imputer_equals_training_medians": true,
+        "t02_reference": {
+          "checked": true,
+          "member_rows_equal": 150000,
+          "all_positions_equal": true,
+          "all_cleaned_cells_equal": true
+        },
+        "checked_output_hashes": 25,
+        "code_sha256": {
+          "src/data.py": "43aa72918d9d0b90e13b92f7d0dae993eb4471900d3c2c0ffd98be8780b9eb1d",
+          "src/baseline.py": "e65a047362f3af4c9063ffe9efc8b10feb99890e07c0e40cae087bd5ada5edb9",
+          "src/evaluation.py": "a70ad48445414f40633b72327913b79db444934e427b8c41a02948c993aa4040",
+          "run_pipeline.py": "37bf6c076f6c5f39c1e5b39eeb0347b55f2405b5465e69ad501e05dcccf00a20",
+          "experiments/morebadly/run_t03.py": "ac196b921dd53216bf200c932e74c65b48c78c3e09ccbb16e3d60e582b48dd9c",
+          "src/scorecard.py": "2a6aee6ec876abb8356b6800a1ccc42834a1bac1871eea4738d9de3def69d5e1",
+          "src/tree_model.py": "2a12a1a1b52811fe68b4a8852001b6844b45afef0750b882c6db7d39ab85f226"
+        },
+        "pipeline_record_sha256": "9b990e6adae5457b51c97589fa07a7edffc2d9fbaa11fbaa74255773991b0c9d",
+        "split_member_file_sha256": "f6997c066dffa08127087bb21f2155f14fec5157a4c04f6c2749e8ab6cf30590",
+        "python": "3.11.17",
+        "packages": {
+          "absl-py": "2.5.1",
+          "altair": "5.5.0",
+          "attrs": "26.1.0",
+          "blinker": "1.9.0",
+          "cachetools": "5.5.2",
+          "certifi": "2026.10.19",
+          "cffi": "2.1.1",
+          "charset-normalizer": "3.5.2",
+          "clarabel": "0.11.1",
+          "click": "8.5.0",
+          "cloudpickle": "3.1.2",
+          "colorama": "0.4.6",
+          "contourpy": "1.3.3",
+          "cvxpy": "1.6.0",
+          "cycler": "0.12.1",
+          "fonttools": "4.67.0",
+          "gitdb": "4.0.12",
+          "gitpython": "3.2.1",
+          "idna": "3.20",
+          "immutabledict": "4.3.1",
+          "iniconfig": "2.3.1",
+          "jinja2": "3.1.6",
+          "joblib": "1.4.2",
+          "jsonschema": "4.26.0",
+          "jsonschema-specifications": "2025.9.1",
+          "kiwisolver": "1.5.1",
+          "lightgbm": "4.5.0",
+          "llvmlite": "0.43.0",
+          "markdown-it-py": "4.2.0",
+          "markupsafe": "3.0.4",
+          "matplotlib": "3.9.2",
+          "mdurl": "0.1.2",
+          "narwhals": "2.27.1",
+          "numba": "0.60.0",
+          "numpy": "1.26.4",
+          "optbinning": "0.20.1",
+          "ortools": "9.9.3963",
+          "osqp": "0.6.7.post3",
+          "packaging": "24.2",
+          "pandas": "2.2.3",
+          "pillow": "11.3.0",
+          "pip": "26.2.2",
+          "pluggy": "1.7.0",
+          "protobuf": "5.26.1",
+          "pyarrow": "20.0.0",
+          "pycparser": "3.11",
+          "pydeck": "0.9.3",
+          "pygments": "2.21.0",
+          "pyparsing": "3.3.3",
+          "pytest": "8.3.3",
+          "python-dateutil": "2.9.0.post0",
+          "pytz": "2026.5",
+          "qdldl": "0.1.9.post1",
+          "referencing": "0.37.0",
+          "requests": "2.34.2",
+          "rich": "13.9.4",
+          "ropwr": "1.1.0",
+          "rpds-py": "2026.9.1",
+          "ruff": "0.8.2",
+          "scikit-learn": "1.5.2",
+          "scipy": "1.14.1",
+          "scs": "3.3.1",
+          "seaborn": "0.13.2",
+          "setuptools": "75.6.0",
+          "shap": "0.46.0",
+          "six": "1.17.0",
+          "slicer": "0.0.8",
+          "smmap": "5.0.3",
+          "streamlit": "1.40.2",
+          "tenacity": "9.2.1",
+          "threadpoolctl": "3.7.0",
+          "toml": "0.10.2",
+          "tornado": "6.5.10",
+          "tqdm": "4.70.1",
+          "typing-extensions": "4.16.0",
+          "tzdata": "2026.5",
+          "urllib3": "2.8.0",
+          "watchdog": "6.0.0"
+        },
+        "installed_constraint_differences": {}
+      },
+      "shared_entry_exit_code": 0,
+      "business_tests": 206
+    },
+    "支持的判断": "同一源字节、清洗规则、分区成员与标签对应可在新环境复现。",
+    "适用限制": "这是既有公开历史数据的内部研究切分。该表没有可用于本项目验证的客户身份或时间顺序证据，按相同特征分组只能避免完全相同输入跨区，不能保证同一真实客户的不同记录、时间外或客户外独立性。公开数据被多次用于开发，也不构成新的独立盲测。\n\n严重逾期标签不平衡，业务含义、样本来源和数据时期限制了结果的迁移范围。月收入和受扶养人数的缺失机制未知，长尾和极端数值仍被保留，可能影响模型；特殊值转换与高度重合的标记列属于研究规则，业务应用前需重新验证。完整含义、币种与观察口径未明确的字段不得自行补定义。\n\n验证集参与树轮数和分类阈值选择；测试集仅在配置固定后评价，不以本次测试成绩修改分区或规则。本次复现证明指定数据版本与实现下的工程一致性，不能证明新客户、未来时期或实际授信业务效果；尚无损失、收益、公平性或部署审批结论。\n",
+    "图表预测评分及SHAP检查位置": "本地 artifacts/Sally-yi/T07-20261029-locked/；SHAP 未在本次运行"
+  },
+  "代码提交版本": {
+    "仓库": "https://github.com/ThreshoLdnnis/credit-risk-scoring-team",
+    "分支与提交SHA": {
+      "commit": "f071c345efbfd1b722a7beaedf688014ca4afbad",
+      "branch": "task/Sally-yi-T07-data-reproduction",
+      "working_tree_changes": "?? experiments/Sally-yi/check_data_reproduction.py"
+    },
+    "未提交改动": "运行时仅新增个人核对脚本；模型、数据模块、共享入口及配置未改。",
+    "Python与依赖版本": {
+      "python": "3.11.17",
+      "packages": {
+        "absl-py": "2.5.1",
+        "altair": "5.5.0",
+        "attrs": "26.1.0",
+        "blinker": "1.9.0",
+        "cachetools": "5.5.2",
+        "certifi": "2026.10.19",
+        "cffi": "2.1.1",
+        "charset-normalizer": "3.5.2",
+        "clarabel": "0.11.1",
+        "click": "8.5.0",
+        "cloudpickle": "3.1.2",
+        "colorama": "0.4.6",
+        "contourpy": "1.3.3",
+        "cvxpy": "1.6.0",
+        "cycler": "0.12.1",
+        "fonttools": "4.67.0",
+        "gitdb": "4.0.12",
+        "gitpython": "3.2.1",
+        "idna": "3.20",
+        "immutabledict": "4.3.1",
+        "iniconfig": "2.3.1",
+        "jinja2": "3.1.6",
+        "joblib": "1.4.2",
+        "jsonschema": "4.26.0",
+        "jsonschema-specifications": "2025.9.1",
+        "kiwisolver": "1.5.1",
+        "lightgbm": "4.5.0",
+        "llvmlite": "0.43.0",
+        "markdown-it-py": "4.2.0",
+        "markupsafe": "3.0.4",
+        "matplotlib": "3.9.2",
+        "mdurl": "0.1.2",
+        "narwhals": "2.27.1",
+        "numba": "0.60.0",
+        "numpy": "1.26.4",
+        "optbinning": "0.20.1",
+        "ortools": "9.9.3963",
+        "osqp": "0.6.7.post3",
+        "packaging": "24.2",
+        "pandas": "2.2.3",
+        "pillow": "11.3.0",
+        "pip": "26.2.2",
+        "pluggy": "1.7.0",
+        "protobuf": "5.26.1",
+        "pyarrow": "20.0.0",
+        "pycparser": "3.11",
+        "pydeck": "0.9.3",
+        "pygments": "2.21.0",
+        "pyparsing": "3.3.3",
+        "pytest": "8.3.3",
+        "python-dateutil": "2.9.0.post0",
+        "pytz": "2026.5",
+        "qdldl": "0.1.9.post1",
+        "referencing": "0.37.0",
+        "requests": "2.34.2",
+        "rich": "13.9.4",
+        "ropwr": "1.1.0",
+        "rpds-py": "2026.9.1",
+        "ruff": "0.8.2",
+        "scikit-learn": "1.5.2",
+        "scipy": "1.14.1",
+        "scs": "3.3.1",
+        "seaborn": "0.13.2",
+        "setuptools": "75.6.0",
+        "shap": "0.46.0",
+        "six": "1.17.0",
+        "slicer": "0.0.8",
+        "smmap": "5.0.3",
+        "streamlit": "1.40.2",
+        "tenacity": "9.2.1",
+        "threadpoolctl": "3.7.0",
+        "toml": "0.10.2",
+        "tornado": "6.5.10",
+        "tqdm": "4.70.1",
+        "typing-extensions": "4.16.0",
+        "tzdata": "2026.5",
+        "urllib3": "2.8.0",
+        "watchdog": "6.0.0"
+      },
+      "constraint_differences": {}
+    },
+    "运行命令": [
+      "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+      "-X",
+      "utf8",
+      "run_pipeline.py",
+      "--models",
+      "baseline",
+      "scorecard",
+      "tree",
+      "--output",
+      "artifacts/Sally-yi/T07-20261029-locked"
+    ],
+    "输出目录与日志": {
+      "artifacts": "artifacts/Sally-yi/T07-20261029-locked",
+      "step_logs": "work/repro_support/execution"
+    },
+    "仓库性质": "团队正式仓库 main 的固定提交"
+  },
+  "存在的问题": [
+    "虚拟环境种子 setuptools 初始版本未自动受约束；已对齐75.6.0后复跑通过。",
+    "Git ownership与API断连已按复现记录处理；未修改全局保护。",
+    "本人现场讲解、同伴审查及最终整合待完成。"
+  ],
+  "处理与复验结果": {
+    "data_audit_status": "passed",
+    "t02_reference_equal": true,
+    "constraint_differences": {}
+  },
+  "AI辅助与本人验证": "本人提供任务和官方数据；Codex 安装、运行、核对和整理。机器执行不等同于本人现场掌握。",
+  "审查者日期与建议": null,
+  "下一步行动": "队友核对分区摘要并复用位置；本人讲解；同伴审查；负责人整合最终报告。",
+  "执行源码SHA256": {
+    "src/data.py": "43aa72918d9d0b90e13b92f7d0dae993eb4471900d3c2c0ffd98be8780b9eb1d",
+    "src/baseline.py": "e65a047362f3af4c9063ffe9efc8b10feb99890e07c0e40cae087bd5ada5edb9",
+    "src/evaluation.py": "a70ad48445414f40633b72327913b79db444934e427b8c41a02948c993aa4040",
+    "run_pipeline.py": "37bf6c076f6c5f39c1e5b39eeb0347b55f2405b5465e69ad501e05dcccf00a20",
+    "experiments/morebadly/run_t03.py": "ac196b921dd53216bf200c932e74c65b48c78c3e09ccbb16e3d60e582b48dd9c",
+    "src/scorecard.py": "2a6aee6ec876abb8356b6800a1ccc42834a1bac1871eea4738d9de3def69d5e1",
+    "src/tree_model.py": "2a12a1a1b52811fe68b4a8852001b6844b45afef0750b882c6db7d39ab85f226"
+  },
+  "核对脚本SHA256": "4ba88dd010ff34df950c1756bccb627c81cdae6c0f5db676c89092a61d093737",
+  "执行步骤": {
+    "environment_before_install": {
+      "name": "environment_before_install",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "-c",
+        "import sys,site,json,importlib.metadata as m; print(json.dumps({\"python\":sys.version,\"prefix\":sys.prefix,\"base_prefix\":sys.base_prefix,\"user_site_enabled\":site.ENABLE_USER_SITE,\"packages\":{d.metadata[\"Name\"]:d.version for d in m.distributions()}},indent=2))"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-29T22:29:32.447580+08:00",
+      "completed_at": "2026-10-29T22:29:32.614344+08:00",
+      "elapsed_seconds": 0.172,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\environment_before_install.log",
+      "log_sha256": "dd2694abe13c2657291f8f6547f398b25ce3a9eed969897b086423f8e8e90431"
+    },
+    "install_requirements": {
+      "name": "install_requirements",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\bootstrap\\bin\\uv.exe",
+        "pip",
+        "install",
+        "--python",
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-r",
+        "requirements.txt",
+        "--offline",
+        "--cache-dir",
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\uv-cache",
+        "--link-mode",
+        "copy"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-29T22:29:32.621245+08:00",
+      "completed_at": "2026-10-29T22:29:50.468046+08:00",
+      "elapsed_seconds": 17.844,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\install_requirements.log",
+      "log_sha256": "9483809788d2a5b6f6ab8e4a438c006d8dfe3bf287d71933d5a200e16ad8a0a9"
+    },
+    "pip_check": {
+      "name": "pip_check",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-29T22:29:50.475053+08:00",
+      "completed_at": "2026-10-29T22:29:51.657737+08:00",
+      "elapsed_seconds": 1.172,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\pip_check.log",
+      "log_sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+    },
+    "environment_check": {
+      "name": "environment_check",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "check_environment.py",
+        "--output",
+        "artifacts/Sally-yi/T07-20261029-checks/environment.json"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-29T22:29:52.230693+08:00",
+      "completed_at": "2026-10-29T22:30:25.559176+08:00",
+      "elapsed_seconds": 33.328,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\environment_check.log",
+      "log_sha256": "e5e17c45ddf58a950586bb3b61f5bcd03c36795fa7dd0d2bb80d505a447e9c6f"
+    },
+    "shared_entry": {
+      "name": "shared_entry",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "run_pipeline.py",
+        "--models",
+        "baseline",
+        "scorecard",
+        "tree",
+        "--output",
+        "artifacts/Sally-yi/T07-20261029-shared"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-29T22:33:44.961849+08:00",
+      "completed_at": "2026-10-29T22:34:03.325208+08:00",
+      "elapsed_seconds": 18.359,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\shared_entry.log",
+      "log_sha256": "da597828fa6327c3aca80b64e8e80a226461f24cc2a5f45d9b0d26a2b156c888"
+    },
+    "pin_seed_setuptools": {
+      "name": "pin_seed_setuptools",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\bootstrap\\bin\\uv.exe",
+        "pip",
+        "install",
+        "--python",
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "--offline",
+        "--cache-dir",
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\uv-cache",
+        "--link-mode",
+        "copy",
+        "setuptools==75.6.0"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-30T10:16:50.302915+08:00",
+      "completed_at": "2026-10-30T10:16:54.948127+08:00",
+      "elapsed_seconds": 4.641,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\pin_seed_setuptools.log",
+      "log_sha256": "9fb87172a7c5726e32497bf343a73c7d0ae3a24a84630afcaf8566a174c4f17d"
+    },
+    "pip_check_locked": {
+      "name": "pip_check_locked",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-30T10:16:54.959773+08:00",
+      "completed_at": "2026-10-30T10:16:58.714022+08:00",
+      "elapsed_seconds": 3.75,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\pip_check_locked.log",
+      "log_sha256": "672aec65a45bed50e70229c70934a7eebf0462595c459b83023027645d57cccf"
+    },
+    "environment_check_locked": {
+      "name": "environment_check_locked",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "check_environment.py",
+        "--output",
+        "artifacts/Sally-yi/T07-20261029-checks/environment_locked.json"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-30T10:16:58.716392+08:00",
+      "completed_at": "2026-10-30T10:17:22.994884+08:00",
+      "elapsed_seconds": 24.281,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\environment_check_locked.log",
+      "log_sha256": "562ac0213bbca58426ea416eec04a6fd27d3ec1044ac1289bc253629d03b0e13"
+    },
+    "shared_entry_locked": {
+      "name": "shared_entry_locked",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "run_pipeline.py",
+        "--models",
+        "baseline",
+        "scorecard",
+        "tree",
+        "--output",
+        "artifacts/Sally-yi/T07-20261029-locked"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-30T10:17:23.006136+08:00",
+      "completed_at": "2026-10-30T10:18:05.936858+08:00",
+      "elapsed_seconds": 42.922,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\shared_entry_locked.log",
+      "log_sha256": "87e3e6790fd93e422b3bcb73b3a8853f3789491d5db52a0ba08b738847e716bc"
+    },
+    "data_audit_locked": {
+      "name": "data_audit_locked",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "experiments/Sally-yi/check_data_reproduction.py",
+        "--run-dir",
+        "artifacts/Sally-yi/T07-20261029-locked",
+        "--reference",
+        "E:/信用评分卡/credit-risk-scoring-team/artifacts/Sally-yi/EXP-001-20261027-reviewed",
+        "--output",
+        "artifacts/Sally-yi/T07-20261029-checks/data_audit_locked.json"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-30T10:18:05.953292+08:00",
+      "completed_at": "2026-10-30T10:18:26.564969+08:00",
+      "elapsed_seconds": 20.625,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\data_audit_locked.log",
+      "log_sha256": "f585f6181505e94da0758b9f255451b3a4f8444596b756b84c2f3902477b313d"
+    },
+    "business_tests": {
+      "name": "business_tests",
+      "command": [
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\env-20261029\\Scripts\\python.exe",
+        "-X",
+        "utf8",
+        "-m",
+        "pytest",
+        "-q",
+        "tests",
+        "-p",
+        "no:cacheprovider",
+        "--basetemp",
+        "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\pytest-business"
+      ],
+      "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\repo-20261029",
+      "started_at": "2026-10-30T10:17:29.379440+08:00",
+      "completed_at": "2026-10-30T10:18:43.186327+08:00",
+      "elapsed_seconds": 73.797,
+      "exit_code": 0,
+      "log": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-10-26\\new-chat\\work\\repro_support\\execution\\business_tests.log",
+      "log_sha256": "97553a5a4af8a5ddba1a78c0df697fd63b2ac8f0ccef85889f34b66b1645e88d"
+    }
+  }
+}
