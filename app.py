@@ -1,4 +1,4 @@
-"""Streamlit UI for local baseline and scorecard experiment bundles.
+"""Streamlit UI for local baseline, scorecard and LightGBM experiment bundles.
 
 The page reuses the project's cleaning and prediction functions. It does not
 fit models, alter thresholds, or make credit approval decisions.
@@ -16,10 +16,12 @@ from typing import Any
 MODEL_FILES = {
     "baseline": "baseline.joblib",
     "scorecard": "scorecard.joblib",
+    "tree": "tree.joblib",
 }
 MODEL_LABELS = {
     "baseline": "Baseline（简单逻辑回归）",
     "scorecard": "WOE/IV 评分卡",
+    "tree": "LightGBM",
 }
 FEATURE_LABELS = {
     "RevolvingUtilizationOfUnsecuredLines": "无担保循环信贷使用率",
@@ -242,6 +244,13 @@ def predict_with_bundle(model_name: str, bundle: Mapping[str, Any], features):
         if probability.ndim != 1 or len(probability) != len(features):
             raise ValueError("Baseline 概率数量与输入行数不一致")
         result = pd.DataFrame({"probability": probability}, index=features.index)
+    elif model_name == "tree":
+        from src.tree_model import predict_tree
+
+        probability = np.asarray(predict_tree(bundle, features), dtype=float)
+        if probability.ndim != 1 or len(probability) != len(features):
+            raise ValueError("LightGBM 概率数量与输入行数不一致")
+        result = pd.DataFrame({"probability": probability}, index=features.index)
     elif model_name == "scorecard":
         from src.scorecard import predict_scorecard
 
@@ -281,11 +290,13 @@ def render_explanation_panel(
 ) -> None:
     """Render the declared tree explainer when an actual tree bundle exists."""
     st.subheader("模型解释（SHAP）")
-    if model_name != "tree" or not available:
+    if model_name != "tree":
         st.info(
-            "当前共享管线没有 LightGBM 模型产物；explain_tree 仍未实现。"
-            "不会把 baseline 或评分卡结果伪装成 SHAP。"
+            "SHAP 解释预留给 LightGBM；当前模型的概率及评分卡分项可在上方查看。"
         )
+        return
+    if not available:
+        st.info("LightGBM 概率预测已接入。SHAP 解释待郭宇哲完成解释模块并联调后接入。")
         return
 
     if explainer is None:
@@ -401,7 +412,7 @@ def render_page(st, artifacts_root: str | Path | None = None) -> None:
     runs = discover_model_runs(root)
     _render_hero(st, len(runs))
     if not runs:
-        st.warning("没有找到可用的本地模型文件。请先运行共享模型管线并保存 baseline 或 scorecard bundle。")
+        st.warning("没有找到可用的本地模型文件。请先运行共享模型管线并保存 baseline、scorecard 或 tree bundle。")
         return
 
     selector_columns = st.columns([1.7, 1])
@@ -509,6 +520,8 @@ def render_page(st, artifacts_root: str | Path | None = None) -> None:
                         x_label="分数贡献",
                     )
                     st.dataframe(details, use_container_width=True)
+                elif selected_model == "tree":
+                    st.info("LightGBM 提供事件概率；信用评分仅由 WOE/IV 评分卡生成。")
                 else:
                     st.info("当前 Baseline 接口提供事件概率，不生成评分卡信用分。")
                 st.caption("页面使用离线预测接口，不使用测试集阈值对客户进行审批分类。")
@@ -518,6 +531,7 @@ def render_page(st, artifacts_root: str | Path | None = None) -> None:
             selected_model,
             bundle=bundle,
             features=features,
+            # SHAP 页面接入待解释模块完成并联调；本次仅接入 LightGBM 推理。
             available=False,
         )
 
