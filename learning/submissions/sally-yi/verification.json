@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-01",
+  "user": "Sally-yi",
+  "directory": "learning/submissions/sally-yi",
+  "scope": "六项课堂小样本练习；不代表真实模型效果或本人现场讲解已验收",
+  "assignment_source_commit": "f071c345efbfd1b722a7beaedf688014ca4afbad",
+  "assignment_source": [
+    "learning/README.md",
+    "docs/学员任务书.md",
+    "learning/templates/exercises.py",
+    "learning/test_exercises.py"
+  ],
+  "github_status": "本次网络刷新和凭据读取不可用；按已同步版本实现，尚未上传本次练习",
+  "tests": {
+    "public": 51,
+    "personal": 13,
+    "exercise_total_passed": 64,
+    "business_tests_passed": 206,
+    "existing_dependency_warnings": 14
+  },
+  "red_green": "先运行TODO得到51失败，补个人案例后63失败；实现通过，补充WOE溢出回归先失败再修复，最终64通过。",
+  "commands": [
+    "python tools/exercises.py check Sally-yi",
+    "python tools/exercises.py check-all",
+    "python tools/exercises.py demo Sally-yi",
+    "python -m pytest -q tests -p no:cacheprovider",
+    "python -m ruff check . --select E,F,I --ignore E501",
+    "python -m compileall -q src tools learning app.py run_pipeline.py check_environment.py"
+  ],
+  "python": "3.11.17",
+  "demo": {
+    "scope": "合成课堂演示，不代表真实信贷模型效果",
+    "missing_rate": {
+      "zero": 0.0,
+      "income": 0.5
+    },
+    "split_rows": {
+      "train": 280,
+      "validation": 60,
+      "test": 60
+    },
+    "auc_a": 0.75,
+    "woe": [
+      1.2237754316221157,
+      -1.2237754316221157
+    ],
+    "iv": 1.3350277435877622,
+    "scores": [
+      600.0,
+      620.0,
+      580.0
+    ],
+    "comparison": [
+      {
+        "model": "a",
+        "roc_auc": 0.75,
+        "brier": 0.15812500000000002,
+        "tn": 1,
+        "fp": 1,
+        "fn": 1,
+        "tp": 1,
+        "threshold": 0.4
+      },
+      {
+        "model": "b",
+        "roc_auc": 1.0,
+        "brier": 0.0875,
+        "tn": 2,
+        "fp": 0,
+        "fn": 0,
+        "tp": 2,
+        "threshold": 0.5
+      }
+    ]
+  },
+  "code_sha256": "169bb3bd736d39dcc216100e9ef61f239e7c4d46cdd1ddb9277c4973877bcb39",
+  "personal_tests_sha256": "9959c23415600c5b15e48e35aed1eab52901af11316ce7520b3b8a5c43395b0d",
+  "public_test_sha256": "dea421bbc636121f46140623786ff0d1866dacdfb68ef91a8154274beb84b024",
+  "assistance": "Codex 辅助编写与执行；本人需复跑、口述和完成现场小改。"
+}
