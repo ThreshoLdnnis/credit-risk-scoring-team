@@ -1,0 +1,101 @@
+{
+  "scope": "六项个人小样本课堂练习；不代表真实信贷模型效果或本人已独立掌握",
+  "learner": "郭宇哲（morebadly）",
+  "assistance": "Codex协助整理实现、测试与验证记录；本人现场解释/小改待完成",
+  "verified_at": "2026-11-01T14:59:03.716855+08:00",
+  "base_main": "93bffe06ab636fd8506dccde590661ee90759fdb",
+  "implementation_commit": "7cbaba05bf059ae79e21945a79d10e69aa44d630",
+  "implementation_commit_note": "本地实际实现提交；远端发布可能使用不同提交SHA，可按source_sha256核对相同内容。",
+  "branch": "task/morebadly-learning-six-exercises",
+  "environment": {
+    "python": "3.11.16",
+    "packages": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "scikit-learn": "1.5.2",
+      "pytest": "8.3.3",
+      "ruff": "0.8.2"
+    }
+  },
+  "tests": {
+    "public": 51,
+    "personal": 14,
+    "total": 65,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "command": ".venv\\Scripts\\python.exe tools/exercises.py check morebadly",
+    "PYTEST_ADDOPTS": "-p no:cacheprovider --basetemp D:\\社团实践\\tmp\\learning-tests-final-20261101 --junitxml artifacts/morebadly/learning-20261101/tests-final.xml",
+    "junit_sha256": "7a4d6df82bf7e16b1fc16ecd54f89713cdedf81395006cb005fe5438326b0c04"
+  },
+  "demo_command": ".venv\\Scripts\\python.exe tools/exercises.py demo morebadly",
+  "demo_sha256": "591a496d66c6114fecaf33fd014a40379624cbc8b66dc54ea2e09d2be07f087d",
+  "demo_results": {
+    "scope": "合成课堂演示，不代表真实信贷模型效果",
+    "missing_rate": {
+      "zero": 0.0,
+      "income": 0.5
+    },
+    "split_rows": {
+      "train": 280,
+      "validation": 60,
+      "test": 60
+    },
+    "auc_a": 0.75,
+    "woe": [
+      1.2237754316221157,
+      -1.2237754316221157
+    ],
+    "iv": 1.3350277435877624,
+    "scores": [
+      600.0,
+      620.0,
+      580.0
+    ],
+    "comparison": [
+      {
+        "model": "a",
+        "roc_auc": 0.75,
+        "brier": 0.15812500000000002,
+        "tn": 1,
+        "fp": 1,
+        "fn": 1,
+        "tp": 1,
+        "threshold": 0.4
+      },
+      {
+        "model": "b",
+        "roc_auc": 1.0,
+        "brier": 0.0875,
+        "tn": 2,
+        "fp": 0,
+        "fn": 0,
+        "tp": 2,
+        "threshold": 0.5
+      }
+    ]
+  },
+  "source_sha256": {
+    "learning/submissions/morebadly/exercises.py": "cd2384b5113e00627f4ba264b709782e78ad9f98db740e123fa3228fef579cdf",
+    "learning/submissions/morebadly/test_morebadly.py": "2af8c715e86c611275387f4f5adfede5ecd934d09a3c2fb1620eed26ce1c1665",
+    "learning/submissions/morebadly/README.md": "5ab9a6a83dabad597baa4344b52ec62ade92dc4c91e252de506666d70b1a9c46",
+    "learning/test_exercises.py": "dea421bbc636121f46140623786ff0d1866dacdfb68ef91a8154274beb84b024",
+    "learning/run_demo.py": "71169578b8d8d9831d84cd3ebc0bd680cb93934ba9e0f4e8e9285359e7127c82",
+    "learning/data/toy_scores.csv": "1cb2ffa30253163a2b22eb09f03ec4f677e251a06fc2051059fe26db200b3f63"
+  },
+  "other_checks": [
+    "Ruff E/F/I (ignore E501) passed",
+    "compileall of personal directory passed",
+    "Demo results match the closed-form handwritten examples"
+  ],
+  "review": {
+    "kind": "independent AI code review",
+    "result": "No substantive issues found in the six implementations, personal tests and handwritten examples.",
+    "human_peer_review": "Pending PR; AI review does not replace team approval."
+  },
+  "limitations": [
+    "人工小样本不构成真实模型结论。",
+    "测试通过不等于本人已独立讲解、现场小改或完成网课。",
+    "本次只提交本人练习和日志，不改业务模块/公共模板/公共测试/依赖。"
+  ]
+}
